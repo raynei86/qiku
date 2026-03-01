@@ -1,0 +1,17 @@
+* Qiku  - A chess library in Common Lisp
+
+** Usage
+
+** Installation
+
+** Author
+
++ Lihui Zhang (zlihui486@gmail.com)
+
+** Copyright
+
+Copyright (c) 2026 Lihui Zhang (zlihui486@gmail.com)
+
+** License
+
+Licensed under the GPL3 License.
