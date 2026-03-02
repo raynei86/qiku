@@ -2,16 +2,4 @@
 
 ** Usage
 
-** Installation
-
-** Author
-
-+ Lihui Zhang (zlihui486@gmail.com)
-
-** Copyright
-
-Copyright (c) 2026 Lihui Zhang (zlihui486@gmail.com)
-
-** License
-
-Licensed under the GPL3 License.
+Still WIP
