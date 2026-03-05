@@ -7,7 +7,8 @@
   :components ((:module "src"
                 :components
                 ((:file "package")
-		 (:file "core" :depends-on ("package")))))
+		 (:file "core" :depends-on ("package"))
+		 (:file "move" :depends-on ("core" "package")))))
   :description "A chess library in Common Lisp"
   :in-order-to ((test-op (test-op "qiku/tests"))))
 
