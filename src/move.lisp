@@ -65,8 +65,8 @@
           (move-old-fullmove-number move) old-fullmove)
     
     (when (or (eql (piece-type piece) :pawn) captured)
-	(setf (halfmove-clock state) 0)
-	(incf (halfmove-clock state)))
+	(setf (halfmove-clock state) 0))
+    	(incf (halfmove-clock state))
 
     (when (eql (turn state) :black)
       (incf (fullmove-number state)))
@@ -90,7 +90,7 @@
     ;; Handle double pawn push
     (when (logtest flags +double-pawn-push-flag+)
       (setf (ep-square state)
-	    (if (eql (piece-color piece) :white) (+ 8 from) (- 8 to))))
+	    (if (eql (piece-color piece) :white) (+ 8 from) (- 8 from))))
 
     ;; Handle castling
     (when (logtest flags +castling-flag+)
