@@ -1,0 +1,20 @@
+;;; Big file of crap so I can keep the implementation cleaner
+(in-package :qiku)
+
+(defun generate-piece (piece-list)
+  (flet ((to-piece (p)
+	   (case p
+	     (bp (make-piece :kind :pawn :color :black))
+	     (wp (make-piece :kind :pawn :color :white))
+	     (br (make-piece :kind :rook :color :black))
+	     (wr (make-piece :kind :rook :color :white))
+	     (bn (make-piece :kind :knight :color :black))
+	     (wn (make-piece :kind :knight :color :white))
+	     (bb (make-piece :kind :bishop :color :black))
+	     (wb (make-piece :kind :bishop :color :white))
+	     (bq (make-piece :kind :queen :color :black))
+	     (wq (make-piece :kind :queen :color :white))
+	     (bk (make-piece :kind :king :color :black))
+	     (wk (make-piece :kind :king :color :white))
+	     (otherwise (make-piece :kind :empty :color nil)))))
+    (mapcar #'to-piece piece-list)))
