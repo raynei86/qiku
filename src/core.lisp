@@ -1,11 +1,33 @@
 (in-package :qiku)
 
-(deftype piece-color () '(member :black :white))
-(deftype piece-type () '(member :pawn :rook :knight :bishop :queen :king :empty))
+(defconstant +white+ -1)
+(defconstant +black+ 1)
+(defconstant +empty+ 0)
+(defconstant +pawn+ 1)
+(defconstant +rook+ 2)
+(defconstant +knight+ 3)
+(defconstant +bishop+ 4)
+(defconstant +queen+ 5)
+(defconstant +king+ 6)
 
-(defstruct piece
-  (type :empty)
-  (color nil))
+;; Pieces are just plain integers
+(defun make-piece (color type)
+  (let ((a (if (eql color :white) +white+ +black+))
+	(b (case type
+	     (:pawn +pawn+)
+	     (:rook +rook+)
+	     (:knight +knight+)
+	     (:bishop +bishop+)
+	     (:queen +queen+)
+	     (:king +king+)
+	     (:empty +empty+))))
+    (* a b)))
+
+(defun piece-color (piece)
+  (signum piece))
+
+(defun piece-type (piece)
+  (abs piece))
 
 ;; More commonly known as "position", but that's a reserved name
 (defclass state ()
