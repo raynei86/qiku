@@ -100,7 +100,7 @@
    (turn
     :initarg :turn
     :accessor turn
-    :type piece-color
+    :type integer
     :documentation "The side that is moving")
    (castling-rights
     :initarg :castling-rights

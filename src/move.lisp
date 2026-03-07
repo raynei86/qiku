@@ -26,13 +26,13 @@
 
     ;; Clocks
     (when (or (eql (piece-type piece) +pawn+) captured)
-      (setf (halfmove-clock state) 0))
-    	(incf (halfmove-clock state))
+      (setf (halfmove-clock s) 0))
+    	(incf (halfmove-clock s))
     (when (eql color +black+)
-      (incf (fullmove-number state)))
+      (incf (fullmove-number s)))
 
     ;; Turn
-    (setf (turn s) (if (eql color :white) :black :white))
+    (setf (turn s) (if (eql color +white+) :black :white))
 
     ;; Ep square
     (setf (ep-square s)
@@ -82,16 +82,16 @@
   "Return updated castling rights after a move; does not mutate anything."
   (let ((r rights))
     ;; King move strips both rights for that side
-    (when (eql piece-type :king)
+    (when (eql piece-type +king+)
       (setf r (logand r (if (eql piece-color :white) #b0011 #b1100))))
     ;; Rook leaving its home square strips one right
-    (when (eql piece-type :rook)
+    (when (eql piece-type +rook+)
       (cond ((= from 0)  (setf r (logand r #b1011)))   ; white queenside
             ((= from 7)  (setf r (logand r #b0111)))   ; white kingside
             ((= from 56) (setf r (logand r #b1110)))   ; black queenside
             ((= from 63) (setf r (logand r #b1101))))) ; black kingside
     ;; Rook captured on its home square strips one right
-    (when (eql captured-type :rook)
+    (when (eql captured-type +rook+)
       (cond ((= to 0)  (setf r (logand r #b1011)))
             ((= to 7)  (setf r (logand r #b0111)))
             ((= to 56) (setf r (logand r #b1110)))

@@ -21,7 +21,7 @@
 
 (defmacro update-bitboard (state piece bit op)
   `(case (piece-color piece)
-     (+white+
+     (#.+white+
       (case (piece-type piece)
 	(:pawn   (setf (white-pawns ,state) (,op (white-pawns ,state) ,bit)))
         (:rook   (setf (white-rooks ,state) (,op (white-rooks ,state) ,bit)))
@@ -29,7 +29,7 @@
         (:bishop (setf (white-bishops ,state) (,op (white-bishops ,state) ,bit)))
         (:queen  (setf (white-queens ,state) (,op (white-queens ,state) ,bit)))
         (:king   (setf (white-king ,state) (,op (white-king ,state) ,bit)))))
-     (+black+
+     (#.+black+
       (case (piece-type ,piece)
         (:pawn   (setf (black-pawns ,state) (,op (black-pawns ,state) ,bit)))
         (:rook   (setf (black-rooks ,state) (,op (black-rooks ,state) ,bit)))
