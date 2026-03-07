@@ -19,6 +19,27 @@
 	     (otherwise (make-piece :white :empty)))))
     (coerce (mapcar #'to-piece piece-list) 'simple-vector)))
 
+(defmacro update-bitboard (state piece bit op)
+  `(case (piece-color piece)
+     (+white+
+      (case (piece-type piece)
+	(:pawn   (setf (white-pawns ,state) (,op (white-pawns ,state) ,bit)))
+        (:rook   (setf (white-rooks ,state) (,op (white-rooks ,state) ,bit)))
+        (:knight (setf (white-knights ,state) (,op (white-knights ,state) ,bit)))
+        (:bishop (setf (white-bishops ,state) (,op (white-bishops ,state) ,bit)))
+        (:queen  (setf (white-queens ,state) (,op (white-queens ,state) ,bit)))
+        (:king   (setf (white-king ,state) (,op (white-king ,state) ,bit)))))
+     (+black+
+      (case (piece-type ,piece)
+        (:pawn   (setf (black-pawns ,state) (,op (black-pawns ,state) ,bit)))
+        (:rook   (setf (black-rooks ,state) (,op (black-rooks ,state) ,bit)))
+        (:knight (setf (black-knights ,state) (,op (black-knights ,state) ,bit)))
+        (:bishop (setf (black-bishops ,state) (,op (black-bishops ,state) ,bit)))
+        (:queen  (setf (black-queens ,state) (,op (black-queens ,state) ,bit)))
+        (:king   (setf (black-king ,state) (,op (black-king ,state) ,bit)))))
+     (otherwise nil)))
+
+
 (defun piece-at (state square)
   (aref (mailbox state) square))
 
