@@ -32,7 +32,7 @@
       (incf (fullmove-number s)))
 
     ;; Turn
-    (setf (turn s) (if (eql color +white+) :black :white))
+    (setf (turn s) (if (= color +white+) +black+ +white+))
 
     ;; Ep square
     (setf (ep-square s)
@@ -47,20 +47,20 @@
            (and captured (piece-type captured))))
 
     ;; Mutations
-    (clear-piece-at s from piece)
+    (clear-piece-at s from)
 
     (cond
       ((logtest flags +en-passant-flag+)
-       (clear-piece-at s (if (eql color +white+) (- to 8) (+ to 8)) captured))
+       (clear-piece-at s (if (eql color +white+) (- to 8) (+ to 8))))
       (captured
-       (clear-piece-at s to captured)))
+       (clear-piece-at s to)))
 
     ;; Handle castling
     (when (logtest flags +castling-flag+)
       (let* ((rook-from (castling-rook-from from to))
              (rook-to   (castling-rook-to   from to))
              (rook      (piece-at s rook-from)))
-        (clear-piece-at s rook-from rook)
+        (clear-piece-at s rook-from)
         (set-piece-at   s rook-to   rook)))
 
     ;; Finally set the piece down

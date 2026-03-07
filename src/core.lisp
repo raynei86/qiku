@@ -101,11 +101,13 @@
     :initarg :turn
     :accessor turn
     :type integer
+    :initform +white+
     :documentation "The side that is moving")
    (castling-rights
     :initarg :castling-rights
     :accessor castling-rights
     :type (unsigned-byte 4)
+    :initform #b1111
     :documentation "Castling rights represented as a bitmask (white is first): KQkq")
    (ep-square :initarg :ep-square
 	      :accessor ep-square
@@ -113,9 +115,11 @@
 	      :type (or null (integer 0 63)))
    (halfmove-clock :initarg :halfmove-clock
 		   :accessor halfmove-clock
+		   :initform 0
 		   :type (integer))
    (fullmove-number :initarg :fullmove-number
 		    :accessor fullmove-number
+		    :initform 1
 		    :type (integer 1))))
 
 (defmethod white-pieces ((state state))

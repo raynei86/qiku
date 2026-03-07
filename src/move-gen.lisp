@@ -1,13 +1,18 @@
 (in-package :qiku)
 
+(defconstant +knight-offsets+ '(+17 +15 +10 +6 -6 -10 -15 -17))
+(defconstant +king-offsets+ '(+9 +8 +7 +1 -1 -7 -8 -9))
+(defconstant +rook-directions+   '((1 . 0) (-1 . 0) (0 . 1) (0 . -1)))
+(defconstant +bishop-directions+ '((1 . 1) (1 . -1) (-1 . 1) (-1 . -1)))
+(defconstant +queen-directions+  (append +rook-directions+ +bishop-directions+))
+
 (defun knight-moves (state color)
   (let ((knights (bb-squares (if (= color +white+) (white-knights state) (black-knights state)))))
     (mapcan (lambda (square) (knight-moves-from state square color)) knights)))
 
 (defun knight-moves-from (state square color)
   (let* ((piece (piece-at state square))
-	 (file (square-file square))
-	 (offsets '(+17 +15 +10 +6 -6 -10 -15 -17)))
+	 (file (square-file square)))
     (mapcan (lambda (offset)
 	      (let* ((to (+ square offset))
 		     (to-file (square-file to))
@@ -21,7 +26,7 @@
 		     (if (/= target +empty+)
 			 (make-capture square to piece target)
 			 (make-quiet square to piece)))))))
-	    offsets)))
+	    +knight-offsets+)))
 
 (defun ray-moves (state square piece color directions)
   "Walk in each direction until blocked"
@@ -53,19 +58,16 @@
 	(t (finish))))))
 
 (defun rook-moves (state color)
-  (let ((rooks (bb-squares (if (= color +white+) (white-rooks state) (black-rooks state))))
-	(rook-directions '((1 . 0) (-1 . 0) (0 . 1) (0 . -1))))
-    (mapcan (lambda (square) (ray-moves state square (piece-at state square) color rook-directions)) rooks)))
+  (let ((rooks (bb-squares (if (= color +white+) (white-rooks state) (black-rooks state)))))
+    (mapcan (lambda (square) (ray-moves state square (piece-at state square) color +rook-directions+)) rooks)))
 
 (defun bishop-moves (state color)
-  (let ((bishop (bb-squares (if (= color +white+) (white-bishops state) (black-bishops state))))
-	(bishop-directions '((1 . 1) (1 . -1) (-1 . 1) (-1 . -1))))
-    (mapcan (lambda (square) (ray-moves state square (piece-at state square) color bishop-directions)) bishop)))
+  (let ((bishop (bb-squares (if (= color +white+) (white-bishops state) (black-bishops state)))))
+    (mapcan (lambda (square) (ray-moves state square (piece-at state square) color +bishop-directions+)) bishop)))
 
 (defun queen-moves (state color)
-  (let ((queen (bb-squares (if (= color +white+) (white-queens state) (black-queens state))))
-	(queen-directions '((1 . 1) (1 . -1) (-1 . 1) (-1 . -1) (1 . 0) (-1 . 0) (0 . 1) (0 . -1))))
-    (mapcan (lambda (square) (ray-moves state square (piece-at state square) color queen-directions)) queen)))
+  (let ((queen (bb-squares (if (= color +white+) (white-queens state) (black-queens state)))))
+    (mapcan (lambda (square) (ray-moves state square (piece-at state square) color +queen-directions+)) queen)))
 
 (defun pawn-moves (state color)
   (let* ((direction (if (= color +white+) +8 -8))
@@ -126,3 +128,166 @@
   (mapcar (lambda (type)
 	    (make-promotion from to piece captured type color))
 	  '(:rook :knight :bishop :queen)))
+
+
+(defun king-moves (state color)
+  (let ((king-square (king-square state color)))
+    (append
+     (king-step-moves state king-square color)
+     (castling-moves state king-square color))))
+
+(defun king-step-moves (state square color)
+  (let* ((piece (piece-at state square))
+	 (file (square-file square))
+	 (offsets '(+9 +8 +7 +1 -1 -7 -8 -9)))
+    (mapcan (lambda (offset)
+	      (let* ((to (+ square offset))
+		     (to-file (square-file to))
+		     (file-difference (abs (- to-file file))))
+
+		(when (and (on-board-p to)
+			   (<= file-difference 1)
+			   (not (square-occupied-by-p state to color)))
+		  (let ((target (piece-at state to)))
+		    (list
+		     (if (/= target +empty+)
+			 (make-capture square to piece target)
+			 (make-quiet square to piece)))))))
+	    offsets)))
+
+(defun castling-moves (state square color)
+  (let ((rights (castling-rights state))
+	(piece (piece-at state square))
+        (result '()))
+
+    (when (= color +white+)
+      ;; White kingside (K): squares 5, 6 must be empty
+      (when (and (logbitp 3 rights)
+                 (not (square-occupied-p state 5))
+                 (not (square-occupied-p state 6))
+                 (not (king-in-check-p state color))
+                 (not (square-attacked-p state 5 color))
+                 (not (square-attacked-p state 6 color)))
+        (push (make-move :from square :to 6 :piece piece :flags +castling-flag+)
+              result))
+      ;; White queenside (Q): squares 1, 2, 3 must be empty
+      (when (and (logbitp 2 rights)
+                 (not (square-occupied-p state 1))
+                 (not (square-occupied-p state 2))
+                 (not (square-occupied-p state 3))
+                 (not (king-in-check-p state color))
+                 (not (square-attacked-p state 3 color))
+                 (not (square-attacked-p state 2 color)))
+        (push (make-move :from square :to 2 :piece piece :flags +castling-flag+)
+              result)))
+
+    (when (= color +black+)
+      ;; Black kingside (k): squares 61, 62 must be empty
+      (when (and (logbitp 1 rights)
+                 (not (square-occupied-p state 61))
+                 (not (square-occupied-p state 62))
+                 (not (king-in-check-p state color))
+                 (not (square-attacked-p state 61 color))
+                 (not (square-attacked-p state 62 color)))
+        (push (make-move :from square :to 62 :piece piece :flags +castling-flag+)
+              result))
+      ;; Black queenside (q): squares 57, 58, 59 must be empty
+      (when (and (logbitp 0 rights)
+                 (not (square-occupied-p state 57))
+                 (not (square-occupied-p state 58))
+                 (not (square-occupied-p state 59))
+                 (not (king-in-check-p state color))
+                 (not (square-attacked-p state 58 color))
+                 (not (square-attacked-p state 59 color)))
+        (push (make-move :from square :to 58 :piece piece :flags +castling-flag+)
+              result)))
+
+    result))
+
+(defun king-in-check-p (state color)
+  (square-attacked-p state (king-square state color) color))
+
+(defun square-attacked-p (state square defender-color)
+  (let ((attacker-color (enemy-of defender-color)))
+    (or
+     ;; Look for enemy pawns on the squares that would attack SQ.
+     (let* ((dir (if (= attacker-color +white+) +8 -8))
+            (f   (square-file square))
+            (candidates
+             (remove-if
+              #'null
+              (list (when (> f 0) (- square dir -1))  ; pawn to left
+                    (when (< f 7) (- square dir +1))  ; pawn to right
+                    ))))
+       (some (lambda (from)
+               (and (on-board-p from)
+                    (let ((p (piece-at state from)))
+                      (and (= (piece-color p) attacker-color)
+                           (= (piece-type  p) +pawn+)))))
+             candidates))
+
+     (some (lambda (offset)
+             (let* ((from   (+ square offset))
+                    (f-diff (abs (- (square-file from) (square-file square)))))
+               (and (on-board-p from)
+                    (member f-diff '(1 2))
+                    (let ((p (piece-at state from)))
+                      (and (= (piece-color p) attacker-color)
+                           (= (piece-type  p) +knight+))))))
+           +knight-offsets+)
+
+     (some (lambda (dir)
+             (ray-finds-attacker-p state square attacker-color dir
+                                   (list +rook+ +queen+)))
+           +rook-dirs+)
+
+     (some (lambda (dir)
+             (ray-finds-attacker-p state square attacker-color dir
+                                   (list +bishop+ +queen+)))
+           +bishop-dirs+)
+
+     (some (lambda (offset)
+             (let* ((from   (+ square offset))
+                    (f-diff (abs (- (square-file from) (square-file square)))))
+               (and (on-board-p from)
+                    (<= f-diff 1)
+                    (let ((p (piece-at state from)))
+                      (and (= (piece-color p) attacker-color)
+                           (= (piece-type  p) +king+))))))
+           +king-offsets+))))
+
+(defun ray-finds-attacker-p (state from-square attacker-color dir attacker-types)
+  "Walk a ray from FROM-SQ; return T if the first piece found is an attacker."
+  (let ((dr (car dir))
+        (df (cdr dir)))
+    (labels ((walk (cur-square)
+               (let* ((nr (+ (square-rank cur-square) dr))
+                      (nf (+ (square-file cur-square) df)))
+                 (if (or (< nr 0) (> nr 7) (< nf 0) (> nf 7))
+                     nil
+                     (let* ((next-square (+ (* nr 8) nf))
+                            (p       (piece-at state next-square)))
+                       (cond
+                         ((= p +empty+) (walk next-square))
+                         ((and (= (piece-color p) attacker-color)
+                               (member (piece-type p) attacker-types))
+                          t)
+                         (t nil)))))))
+      (walk from-square))))
+
+
+;; Generate all moves
+(defun generate-pseudolegal-moves (state)
+  (let ((color (turn state)))
+    (append
+     (pawn-moves state color)
+     (knight-moves state color)
+     (bishop-moves state color)
+     (rook-moves state color)
+     (queen-moves state color)
+     (king-moves state color))))
+
+(defun generate-legal-moves (state)
+  (remove-if
+   (lambda (move) (king-in-check-p (do-move state move) (turn state)))
+   (generate-pseudolegal-moves state)))

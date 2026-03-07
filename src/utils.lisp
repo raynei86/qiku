@@ -144,3 +144,11 @@
             (when (move-captured  m) (piece-name (move-captured  m)))
             (when (move-promotion m) (piece-name (move-promotion m))))))
 
+
+(defun checkmate-p (state)
+  (and (king-in-check-p state (turn state))
+       (null (generate-legal-moves state))))
+
+(defun stalemate-p (state)
+  (and (not (king-in-check-p state (turn state)))
+       (null (generate-legal-moves state))))
