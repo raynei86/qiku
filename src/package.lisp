@@ -1,3 +1,3 @@
 (defpackage :qiku
-  (:use :cl))
+  (:use :cl :iterate))
 

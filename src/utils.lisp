@@ -97,13 +97,13 @@
 
 (defun king-square (state color)
   (let ((bb (if (= color +white+) (white-king state) (black-king state))))
-    (loop for sq from 0 to 63
-          when (logbitp sq bb) return sq)))
+    (car (bb-squares bb))))
 
 (defun bb-squares (bb)
   "Return a list of all square indices set in BB."
-  (loop for sq from 0 to 63
-        when (logbitp sq bb) collect sq))
+  (iterate
+    (for square from 0 to 63)
+    (when (logbitp square bb) (collect square))))
 
 ;; Formatting related utils
 (defun square->algebraic (square)

@@ -3,12 +3,13 @@
   :author "Lihui Zhang"
   :mailto "zlihui486@gmail.com"
   :license "LGPL-3"
-  :depends-on ("alexandria")
+  :depends-on ("iterate")
   :components ((:module "src"
                 :components
                 ((:file "package")
 		 (:file "core" :depends-on ("package"))
-		 (:file "move" :depends-on ("core" "package")))))
+		 (:file "move" :depends-on ("core" "package"))
+		 (:file "move-gen" :depends-on ("core" "move" "package")))))
   :description "A chess library in Common Lisp"
   :in-order-to ((test-op (test-op "qiku/tests"))))
 
