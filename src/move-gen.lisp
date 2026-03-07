@@ -66,3 +66,63 @@
   (let ((queen (bb-squares (if (= color +white+) (white-queens state) (black-queens state))))
 	(queen-directions '((1 . 1) (1 . -1) (-1 . 1) (-1 . -1) (1 . 0) (-1 . 0) (0 . 1) (0 . -1))))
     (mapcan (lambda (square) (ray-moves state square (piece-at state square) color queen-directions)) queen)))
+
+(defun pawn-moves (state color)
+  (let* ((direction (if (= color +white+) +8 -8))
+	 (start-rank (if (= color +white+) 1 6))
+	 (promo-rank (if (= color +white+) 7 0))
+	 (pawns (bb-squares (if (= color +white+) (white-pawns state) (black-pawns state)))))
+    (mapcan (lambda (square) (pawn-moves-from state square color direction start-rank promo-rank)) pawns)))
+
+(defun pawn-moves-from (state square color direction start-rank promo-rank)
+  (let* ((piece (piece-at state square))
+	 (push1 (+ square direction))
+	 (push2 (+ square direction direction))
+	 (rank (square-rank square))
+	 (result '()))
+
+    ;; Single and double push
+    (when (and (on-board-p push1)
+	       (not (square-occupied-p state push1)))
+      (if (= (square-rank push1) promo-rank)
+	  (setf result (append result (promotion-moves square push1 piece nil color)))
+	  (push (make-quiet square push1 piece) result)))
+
+    (when (and (= rank start-rank)
+	       (on-board-p push2)
+	       (not (square-occupied-p state push2)))
+      (push (make-move :from square :to push2 :piece piece :flags +double-pawn-push-flag+) result))
+
+    ;; Captures
+    (iterate
+      (with capture-squares = (pawn-capture-squares square direction))
+      (for capture-square in capture-squares)
+      (while (on-board-p capture-square))
+      (for target = (piece-at state capture-square))
+
+      (when (and (/= target +empty+)
+		 (= (piece-color target) (enemy-of color)))
+	(if (= (square-rank capture-square) promo-rank)
+	    (setf result (append result (promotion-moves square capture-square piece target color)))
+	    (push (make-capture square capture-square piece target) result))))
+
+    ;; En passant
+    (let ((ep (ep-square state)))
+      (when (and ep
+		 (member ep (pawn-capture-squares square color)))
+	(let ((captured (piece-at state (- ep direction))))
+	  (push (make-move :from square :to ep
+			   :piece piece :captured
+			   captured :flags (logior +capture-flag+ +en-passant-flag+))
+		result))))
+    result))
+
+(defun pawn-capture-squares (square direction)
+  (let ((file (square-file square)))
+    (list (if (> file 0) (+ square direction -1) -1)
+	  (if (< file 7) (+ square direction +1) -1))))
+
+(defun promotion-moves (from to piece captured color)
+  (mapcar (lambda (type)
+	    (make-promotion from to piece captured type color))
+	  '(:rook :knight :bishop :queen)))

@@ -109,6 +109,7 @@
     :documentation "Castling rights represented as a bitmask (white is first): KQkq")
    (ep-square :initarg :ep-square
 	      :accessor ep-square
+	      :initform nil
 	      :type (or null (integer 0 63)))
    (halfmove-clock :initarg :halfmove-clock
 		   :accessor halfmove-clock
