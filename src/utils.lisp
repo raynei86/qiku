@@ -1,6 +1,7 @@
 ;;; Big file of crap so I can keep the implementation cleaner
 (in-package :qiku)
 
+;; Bitboard and state utils
 (defun generate-piece (piece-list)
   (flet ((to-piece (p)
 	   (case p
@@ -63,6 +64,7 @@
 (defun piece-at (state square)
   (aref (mailbox state) square))
 
+;; Move related utils
 (defun make-quiet (from to piece)
   (make-move :from from :to to :piece piece))
 
@@ -76,3 +78,69 @@
              :promotion (make-piece color promo-type)
              :flags (logior +promotion-flag+
                             (if captured +capture-flag+ 0))))
+
+(defun square-occupied-p (state square)
+  (/= +empty+ (piece-at state square)))
+
+(defun square-occupied-by-p (state square color)
+  (= color (piece-color (piece-at state square))))
+
+(defun enemy-of (color)
+  (if (= color +white+) +black+ +white+))
+
+(defun square-rank (square) (floor square 8))
+
+(defun square-file (square) (mod square 8))
+
+(defun on-board-p (square)
+  (<= 0 square 63))
+
+(defun king-square (state color)
+  (let ((bb (if (= color +white+) (white-king state) (black-king state))))
+    (loop for sq from 0 to 63
+          when (logbitp sq bb) return sq)))
+
+(defun bb-squares (bb)
+  "Return a list of all square indices set in BB."
+  (loop for sq from 0 to 63
+        when (logbitp sq bb) collect sq))
+
+;; Formatting related utils
+(defun square->algebraic (square)
+  "Convert a square index (0=a1) to a string like \"e4\"."
+  (let ((file (mod square 8))
+        (rank (floor square 8)))
+    (format nil "~c~d"
+            (aref "abcdefgh" file)
+            (1+ rank))))
+
+(defun piece-type-name (piece)
+  (case (piece-type piece)
+    (#.+pawn+   "Pawn")
+    (#.+rook+   "Rook")
+    (#.+knight+ "Knight")
+    (#.+bishop+ "Bishop")
+    (#.+queen+  "Queen")
+    (#.+king+   "King")
+    (otherwise  "Empty")))
+
+(defun piece-color-name (piece)
+  (case (piece-color piece)
+    (#.+white+ "White")
+    (#.+black+ "Black")
+    (otherwise "None")))
+
+(defun piece-name (piece)
+  (if (zerop piece)
+      "Empty"
+      (format nil "~a ~a" (piece-color-name piece) (piece-type-name piece))))
+
+(defmethod print-object ((m move) stream)
+  (print-unreadable-object (m stream :type t)
+    (format stream "(~a->~a) (~a~@[ captures ~a~]~@[ promotes to ~a~])"
+            (sq->algebraic  (move-from m))
+            (sq->algebraic  (move-to   m))
+            (piece-name     (move-piece m))
+            (when (move-captured  m) (piece-name (move-captured  m)))
+            (when (move-promotion m) (piece-name (move-promotion m))))))
+
