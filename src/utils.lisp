@@ -39,6 +39,26 @@
         (:king   (setf (black-king ,state) (,op (black-king ,state) ,bit)))))
      (otherwise nil)))
 
+(defun copy-state (state)
+  (make-instance 'state
+    :mailbox         (copy-seq (mailbox state))
+    :white-pawns     (white-pawns   state)
+    :white-knights   (white-knights state)
+    :white-bishops   (white-bishops state)
+    :white-rooks     (white-rooks   state)
+    :white-queens    (white-queens  state)
+    :white-king      (white-king    state)
+    :black-pawns     (black-pawns   state)
+    :black-knights   (black-knights state)
+    :black-bishops   (black-bishops state)
+    :black-rooks     (black-rooks   state)
+    :black-queens    (black-queens  state)
+    :black-king      (black-king    state)
+    :turn            (turn            state)
+    :castling-rights (castling-rights state)
+    :ep-square       (ep-square       state)
+    :halfmove-clock  (halfmove-clock  state)
+    :fullmove-number (fullmove-number state)))
 
 (defun piece-at (state square)
   (aref (mailbox state) square))
@@ -53,6 +73,6 @@
 (defun make-promotion (from to piece captured promo-type color)
   (make-move :from from :to to :piece piece
              :captured captured
-             :promotion (make-piece :type promo-type :color color)
+             :promotion (make-piece color promo-type)
              :flags (logior +promotion-flag+
                             (if captured +capture-flag+ 0))))
