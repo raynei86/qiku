@@ -35,14 +35,14 @@
     :initarg :mailbox
     :accessor mailbox
     :initform (generate-piece
-	       '(br bn bb bq bk bb bn br
-		 bp bp bp bp bp bp bp bp
-		 00 00 00 00 00 00 00 00
-		 00 00 00 00 00 00 00 00
-		 00 00 00 00 00 00 00 00
-		 00 00 00 00 00 00 00 00
+	       '(wr wn wb wq wk wb wn wr
 		 wp wp wp wp wp wp wp wp
-		 wr wn wb wq wk wb wn wr))
+		 00 00 00 00 00 00 00 00
+		 00 00 00 00 00 00 00 00
+		 00 00 00 00 00 00 00 00
+		 00 00 00 00 00 00 00 00
+		 bp bp bp bp bp bp bp bp
+		 br bn bb bq bk bb bn br))
     :type (simple-vector 64)
     :documentation "The 8x8 mailbox representation of the board")
    
