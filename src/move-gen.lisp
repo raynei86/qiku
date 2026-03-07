@@ -88,30 +88,30 @@
 	       (not (square-occupied-p state push1)))
       (if (= (square-rank push1) promo-rank)
 	  (setf result (append result (promotion-moves square push1 piece nil color)))
-	  (push (make-quiet square push1 piece) result)))
+	  (push (make-quiet square push1 piece) result))
 
-    (when (and (= rank start-rank)
-	       (on-board-p push2)
-	       (not (square-occupied-p state push2)))
-      (push (make-move :from square :to push2 :piece piece :flags +double-pawn-push-flag+) result))
+      (when (and (= rank start-rank)
+		 (on-board-p push2)
+		 (not (square-occupied-p state push2)))
+	(push (make-move :from square :to push2 :piece piece :flags +double-pawn-push-flag+) result)))
 
     ;; Captures
     (iterate
       (with capture-squares = (pawn-capture-squares square direction))
       (for capture-square in capture-squares)
-      (while (on-board-p capture-square))
-      (for target = (piece-at state capture-square))
 
-      (when (and (/= target +empty+)
-		 (= (piece-color target) (enemy-of color)))
-	(if (= (square-rank capture-square) promo-rank)
-	    (setf result (append result (promotion-moves square capture-square piece target color)))
-	    (push (make-capture square capture-square piece target) result))))
+      (when (on-board-p capture-square)
+	(let ((target (piece-at state capture-square)))
+	 (when (and (/= target +empty+)
+		    (= (piece-color target) (enemy-of color)))
+	   (if (= (square-rank capture-square) promo-rank)
+	       (setf result (append result (promotion-moves square capture-square piece target color)))
+	       (push (make-capture square capture-square piece target) result))))))
 
     ;; En passant
     (let ((ep (ep-square state)))
       (when (and ep
-		 (member ep (pawn-capture-squares square color)))
+		 (member ep (pawn-capture-squares square direction)))
 	(let ((captured (piece-at state (- ep direction))))
 	  (push (make-move :from square :to ep
 			   :piece piece :captured
@@ -239,12 +239,12 @@
      (some (lambda (dir)
              (ray-finds-attacker-p state square attacker-color dir
                                    (list +rook+ +queen+)))
-           +rook-dirs+)
+           +rook-directions+)
 
      (some (lambda (dir)
              (ray-finds-attacker-p state square attacker-color dir
                                    (list +bishop+ +queen+)))
-           +bishop-dirs+)
+           +bishop-directions+)
 
      (some (lambda (offset)
              (let* ((from   (+ square offset))
@@ -291,3 +291,30 @@
   (remove-if
    (lambda (move) (king-in-check-p (do-move state move) (turn state)))
    (generate-pseudolegal-moves state)))
+
+(defun perft (state depth)
+  (if (= depth 0)
+      1
+      (reduce #'+ (generate-legal-moves state)
+              :key (lambda (m) (perft (do-move state m) (1- depth)))
+              :initial-value 0)))
+
+(defun perft-divide (state depth)
+  (let* ((moves  (generate-legal-moves state))
+         (counts (mapcar (lambda (m)
+                           (cons m (perft (do-move state m) (1- depth))))
+                         moves))
+         (total  (reduce #'+ counts :key #'cdr :initial-value 0)))
+    (dolist (pair counts)
+      (format t "~a: ~d~%" (move->uci (car pair)) (cdr pair)))
+    (format t "~%Total: ~d~%" total)
+    total))
+
+(defun move->uci (m)
+  "Format a move in UCI notation, e.g. \"e2e4\", \"e7e8q\"."
+  (format nil "~a~a~@[~a~]"
+          (square->algebraic (move-from m))
+          (square->algebraic (move-to   m))
+          (when (move-promotion m)
+            (char-downcase
+             (char (piece-type-name (move-promotion m)) 0)))))

@@ -83,7 +83,7 @@
   (let ((r rights))
     ;; King move strips both rights for that side
     (when (eql piece-type +king+)
-      (setf r (logand r (if (eql piece-color :white) #b0011 #b1100))))
+      (setf r (logand r (if (eql piece-color +white+) #b0011 #b1100))))
     ;; Rook leaving its home square strips one right
     (when (eql piece-type +rook+)
       (cond ((= from 0)  (setf r (logand r #b1011)))   ; white queenside
