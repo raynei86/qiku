@@ -10,29 +10,39 @@
 (defconstant +queen+ 5)
 (defconstant +king+ 6)
 
-;; Pieces are just plain integers
-(deftype piece () '(integer -6 6))
+(deftype piece () '(unsigned-byte 4))
+(deftype color () '(unsigned-byte 1))
+
+(defconstant +white+ 0)
+(defconstant +black+ 8)
+(defconstant +empty+ 0)
+(defconstant +pawn+  1)
+(defconstant +rook+  2)
+(defconstant +knight+ 3)
+(defconstant +bishop+ 4)
+(defconstant +queen+ 5)
+(defconstant +king+  6)
 
 (declaim (inline make-piece))
 (defun make-piece (color type)
-  (let ((a (if (eql color :white) +white+ +black+))
-	(b (case type
-	     (:pawn +pawn+)
-	     (:rook +rook+)
-	     (:knight +knight+)
-	     (:bishop +bishop+)
-	     (:queen +queen+)
-	     (:king +king+)
-	     (:empty +empty+))))
-    (* a b)))
+    (let ((color (if (eql color :white) +white+ +black+))
+	  (type (case type
+		  (:pawn +pawn+)
+		  (:rook +rook+)
+		  (:knight +knight+)
+		  (:bishop +bishop+)
+		  (:queen +queen+)
+		  (:king +king+)
+		  (:empty +empty+))))
+    (logior color type)))
 
 (declaim (inline piece-color))
 (defun piece-color (piece)
-  (signum piece))
+  (logand piece 8))
 
 (declaim (inline piece-type))
 (defun piece-type (piece)
-  (abs piece))
+  (logand piece 7))
 
 ;; More commonly known as "position", but that's a reserved name
 (defclass state ()
@@ -105,7 +115,7 @@
    (turn
     :initarg :turn
     :accessor turn
-    :type (integer -1 1)
+    :type color
     :initform +white+
     :documentation "The side that is moving")
    (castling-rights
