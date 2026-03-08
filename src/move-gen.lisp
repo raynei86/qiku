@@ -7,7 +7,7 @@
 (defconstant +queen-directions+  (append +rook-directions+ +bishop-directions+))
 
 (defun knight-moves (state color)
-  (let ((knights (bb-squares (if (= color +white+) (white-knights state) (black-knights state)))))
+  (let ((knights (bb-squares (if (= color +white+) (state-white-knights state) (state-black-knights state)))))
     (mapcan (lambda (square) (knight-moves-from state square color)) knights)))
 
 (defun knight-moves-from (state square color)
@@ -58,22 +58,22 @@
 	(t (finish))))))
 
 (defun rook-moves (state color)
-  (let ((rooks (bb-squares (if (= color +white+) (white-rooks state) (black-rooks state)))))
+  (let ((rooks (bb-squares (if (= color +white+) (state-white-rooks state) (state-black-rooks state)))))
     (mapcan (lambda (square) (ray-moves state square (piece-at state square) color +rook-directions+)) rooks)))
 
 (defun bishop-moves (state color)
-  (let ((bishop (bb-squares (if (= color +white+) (white-bishops state) (black-bishops state)))))
+  (let ((bishop (bb-squares (if (= color +white+) (state-white-bishops state) (state-black-bishops state)))))
     (mapcan (lambda (square) (ray-moves state square (piece-at state square) color +bishop-directions+)) bishop)))
 
 (defun queen-moves (state color)
-  (let ((queen (bb-squares (if (= color +white+) (white-queens state) (black-queens state)))))
+  (let ((queen (bb-squares (if (= color +white+) (state-white-queens state) (state-black-queens state)))))
     (mapcan (lambda (square) (ray-moves state square (piece-at state square) color +queen-directions+)) queen)))
 
 (defun pawn-moves (state color)
   (let* ((direction (if (= color +white+) +8 -8))
 	 (start-rank (if (= color +white+) 1 6))
 	 (promo-rank (if (= color +white+) 7 0))
-	 (pawns (bb-squares (if (= color +white+) (white-pawns state) (black-pawns state)))))
+	 (pawns (bb-squares (if (= color +white+) (state-white-pawns state) (state-black-pawns state)))))
     (mapcan (lambda (square) (pawn-moves-from state square color direction start-rank promo-rank)) pawns)))
 
 (defun pawn-moves-from (state square color direction start-rank promo-rank)
@@ -109,7 +109,7 @@
 	       (push (make-capture square capture-square piece target) result))))))
 
     ;; En passant
-    (let ((ep (ep-square state)))
+    (let ((ep (state-ep-square state)))
       (when (and ep
 		 (member ep (pawn-capture-squares square direction)))
 	(let ((captured (piece-at state (- ep direction))))
@@ -156,7 +156,7 @@
 	    offsets)))
 
 (defun castling-moves (state square color)
-  (let ((rights (castling-rights state))
+  (let ((rights (state-castling-rights state))
 	(piece (piece-at state square))
         (result '()))
 
@@ -278,7 +278,7 @@
 
 ;; Generate all moves
 (defun generate-pseudolegal-moves (state)
-  (let ((color (turn state)))
+  (let ((color (state-turn state)))
     (append
      (pawn-moves state color)
      (knight-moves state color)
@@ -288,33 +288,21 @@
      (king-moves state color))))
 
 (defun generate-legal-moves (state)
-  (remove-if
-   (lambda (move) (king-in-check-p (do-move state move) (turn state)))
-   (generate-pseudolegal-moves state)))
+  (let ((color (state-turn state)))
+    (iterate
+      (for move in (generate-pseudolegal-moves state))
+      (do-move! state move)
+      (when (not (king-in-check-p state color))
+        (collect move))
+      (undo-move! state move))))
 
 (defun perft (state depth)
   (if (= depth 0)
       1
-      (reduce #'+ (generate-legal-moves state)
-              :key (lambda (m) (perft (do-move state m) (1- depth)))
-              :initial-value 0)))
-
-(defun perft-divide (state depth)
-  (let* ((moves  (generate-legal-moves state))
-         (counts (mapcar (lambda (m)
-                           (cons m (perft (do-move state m) (1- depth))))
-                         moves))
-         (total  (reduce #'+ counts :key #'cdr :initial-value 0)))
-    (dolist (pair counts)
-      (format t "~a: ~d~%" (move->uci (car pair)) (cdr pair)))
-    (format t "~%Total: ~d~%" total)
-    total))
-
-(defun move->uci (m)
-  "Format a move in UCI notation, e.g. \"e2e4\", \"e7e8q\"."
-  (format nil "~a~a~@[~a~]"
-          (square->algebraic (move-from m))
-          (square->algebraic (move-to   m))
-          (when (move-promotion m)
-            (char-downcase
-             (char (piece-type-name (move-promotion m)) 0)))))
+      (let ((color (state-turn state)))
+        (iterate
+          (for move in (generate-pseudolegal-moves state))
+          (do-move! state move)
+          (unless (king-in-check-p state color)
+            (sum (perft state (1- depth))))
+          (undo-move! state move)))))

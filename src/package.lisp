@@ -31,15 +31,13 @@
    #:black-rooks
    #:black-queens
    #:black-king
-   #:white-pieces
-   #:black-pieces
-   #:all-pieces
    #:set-piece-at!
    #:clear-piece-at!
 
    ;; Moves
    #:move
-   #:do-move
+   #:do-move!
+   #:undo-move!
    #:+capture-flag+
    #:+en-passant-flag+
    #:+castling-flag+

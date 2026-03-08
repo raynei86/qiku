@@ -12,11 +12,13 @@
   (piece nil :type integer)
   (captured nil :type (or null integer))
   (promotion nil :type (or null integer))
-  (flags 0 :type (unsigned-byte 5)))
+  (flags 0 :type (unsigned-byte 5))
+  (old-ep-square nil :type (or null (integer 0 63)))
+  (old-castling-rights #b00000 :type (unsigned-byte 5))
+  (old-halfmove-clock 0 :type integer))
 
-(defun do-move (state move)
-  (let* ((s (copy-state state))
-	 (from (move-from move))
+(defun do-move! (state move)
+  (let* ((from (move-from move))
          (to (move-to move))
          (piece (move-piece move))
          (captured (move-captured move))
@@ -24,49 +26,88 @@
          (flags (move-flags move))
 	 (color (piece-color piece)))
 
+    (setf (move-old-ep-square       move) (state-ep-square       state)
+          (move-old-castling-rights move) (state-castling-rights state)
+          (move-old-halfmove-clock  move) (state-halfmove-clock  state))
+    
     ;; Clocks
     (when (or (eql (piece-type piece) +pawn+) captured)
-      (setf (halfmove-clock s) 0))
-    	(incf (halfmove-clock s))
+      (setf (state-halfmove-clock state) 0))
+    	(incf (state-halfmove-clock state))
     (when (eql color +black+)
-      (incf (fullmove-number s)))
+      (incf (state-fullmove-number state)))
 
     ;; Turn
-    (setf (turn s) (if (= color +white+) +black+ +white+))
+    (setf (state-turn state) (enemy-of color))
 
     ;; Ep square
-    (setf (ep-square s)
+    (setf (state-ep-square state)
           (when (logtest flags +double-pawn-push-flag+)
             (if (eql color +white+) (+ from 8) (- from 8))))
 
     ;; Castling
-    (setf (castling-rights s)
+    (setf (state-castling-rights state)
           (compute-castling-rights
-           (castling-rights s) from to
+           (state-castling-rights state) from to
            (piece-type piece) color
            (and captured (piece-type captured))))
 
     ;; Mutations
-    (clear-piece-at! s from)
+    (clear-piece-at! state from)
 
     (cond
       ((logtest flags +en-passant-flag+)
-       (clear-piece-at! s (if (eql color +white+) (- to 8) (+ to 8))))
+       (clear-piece-at! state (if (eql color +white+) (- to 8) (+ to 8))))
       (captured
-       (clear-piece-at! s to)))
+       (clear-piece-at! state to)))
 
     ;; Handle castling
     (when (logtest flags +castling-flag+)
       (let* ((rook-from (castling-rook-from from to))
              (rook-to   (castling-rook-to   from to))
-             (rook      (piece-at s rook-from)))
-        (clear-piece-at! s rook-from)
-        (set-piece-at!   s rook-to   rook)))
+             (rook      (piece-at state rook-from)))
+        (clear-piece-at! state rook-from)
+        (set-piece-at!   state rook-to   rook)))
 
     ;; Finally set the piece down
-    (set-piece-at! s to (or promotion piece))
+    (set-piece-at! state to (or promotion piece))
 
-    s))
+    state))
+
+(defun undo-move! (state move)
+  "Reverse the effect of a previous DO-MOVE! on STATE."
+  (let* ((from      (move-from      move))
+         (to        (move-to        move))
+         (piece     (move-piece     move))
+         (captured  (move-captured  move))
+         (flags     (move-flags     move))
+         (color     (piece-color piece)))
+
+    (setf (state-ep-square       state) (move-old-ep-square       move)
+          (state-castling-rights state) (move-old-castling-rights move)
+          (state-halfmove-clock  state) (move-old-halfmove-clock  move)
+          (state-turn            state) color)
+    (when (= color +black+)
+      (decf (state-fullmove-number state)))
+
+    (clear-piece-at! state to)
+
+    (set-piece-at! state from piece)
+
+    (cond
+      ((logtest flags +en-passant-flag+)
+       (set-piece-at! state (if (= color +white+) (- to 8) (+ to 8)) captured))
+      (captured
+       (set-piece-at! state to captured)))
+
+    (when (logtest flags +castling-flag+)
+      (let* ((rook-from (castling-rook-from from to))
+             (rook-to   (castling-rook-to   from to))
+             (rook      (piece-at state rook-to)))
+        (clear-piece-at! state rook-to)
+        (set-piece-at!   state rook-from rook)))
+
+    state))
 
 
 (declaim (inline castling-rook-from))
