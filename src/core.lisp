@@ -46,7 +46,7 @@
    ;; Whole bunch of bitboards
    (white-pawns #x000000000000FF00
     :type (unsigned-byte 64))
-   (white-knights #x000000000000042
+   (white-knights #x0000000000000042
     :type (unsigned-byte 64))
    (white-bishops  #x000000000000024
     :type (unsigned-byte 64))
