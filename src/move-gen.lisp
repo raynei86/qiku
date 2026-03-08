@@ -7,6 +7,7 @@
 (defconstant +queen-directions+  (append +rook-directions+ +bishop-directions+))
 
 (defun knight-moves (state color)
+  (declare (type color color))
   (let ((knights (bb-squares (if (= color +white+) (state-white-knights state) (state-black-knights state)))))
     (mapcan (lambda (square) (knight-moves-from state square color)) knights)))
 
@@ -35,6 +36,10 @@
 	  directions))
 
 (defun ray-in-direction (state square piece color direction)
+  (declare (type mailbox-index square)
+	   (type piece piece)
+	   (type color color)
+	   (type cons direction))
   (let ((dr (car direction))
 	(df (cdr direction)))
     (iterate
@@ -77,6 +82,10 @@
     (mapcan (lambda (square) (pawn-moves-from state square color direction start-rank promo-rank)) pawns)))
 
 (defun pawn-moves-from (state square color direction start-rank promo-rank)
+  (declare (type mailbox-index square)
+	   (type color color)
+	   (type (integer -8 +8) direction)
+	   (type (integer 0 7) start-rank promo-rank))
   (let* ((piece (piece-at state square))
 	 (push1 (+ square direction))
 	 (push2 (+ square direction direction))
@@ -102,11 +111,11 @@
 
       (when (on-board-p capture-square)
 	(let ((target (piece-at state capture-square)))
-	 (when (and (/= target +empty+)
-		    (= (piece-color target) (enemy-of color)))
-	   (if (= (square-rank capture-square) promo-rank)
-	       (setf result (append result (promotion-moves square capture-square piece target color)))
-	       (push (make-capture square capture-square piece target) result))))))
+	  (when (and (/= target +empty+)
+		     (= (piece-color target) (enemy-of color)))
+	    (if (= (square-rank capture-square) promo-rank)
+		(setf result (append result (promotion-moves square capture-square piece target color)))
+		(push (make-capture square capture-square piece target) result))))))
 
     ;; En passant
     (let ((ep (state-ep-square state)))
@@ -120,6 +129,8 @@
     result))
 
 (defun pawn-capture-squares (square direction)
+  (declare (type mailbox-index square)
+	   (type (integer -8 +8) direction))
   (let ((file (square-file square)))
     (list (if (> file 0) (+ square direction -1) -1)
 	  (if (< file 7) (+ square direction +1) -1))))
@@ -127,7 +138,7 @@
 (defun promotion-moves (from to piece captured color)
   (mapcar (lambda (type)
 	    (make-promotion from to piece captured type color))
-	  '(:rook :knight :bishop :queen)))
+	  '(+rook+ +knight+ +bishop+ +queen+)))
 
 
 (defun king-moves (state color)
@@ -137,9 +148,10 @@
      (castling-moves state king-square color))))
 
 (defun king-step-moves (state square color)
+  (declare (type mailbox-index square)
+	   (type color color))
   (let* ((piece (piece-at state square))
-	 (file (square-file square))
-	 (offsets '(+9 +8 +7 +1 -1 -7 -8 -9)))
+	 (file (square-file square)))
     (mapcan (lambda (offset)
 	      (let* ((to (+ square offset))
 		     (to-file (square-file to))
@@ -153,9 +165,11 @@
 		     (if (/= target +empty+)
 			 (make-capture square to piece target)
 			 (make-quiet square to piece)))))))
-	    offsets)))
+	    +king-offsets+)))
 
 (defun castling-moves (state square color)
+  (declare (type mailbox-index square)
+	   (type color color))
   (let ((rights (state-castling-rights state))
 	(piece (piece-at state square))
         (result '()))
@@ -204,21 +218,24 @@
 
     result))
 
+(declaim (inline king-in-check-p))
 (defun king-in-check-p (state color)
   (square-attacked-p state (king-square state color) color))
 
 (defun square-attacked-p (state square defender-color)
+  (declare (type mailbox-index square)
+	   (type color defender-color))
   (let ((attacker-color (enemy-of defender-color)))
     (or
      ;; Look for enemy pawns on the squares that would attack SQ.
      (let* ((dir (if (= attacker-color +white+) +8 -8))
             (f   (square-file square))
             (candidates
-             (remove-if
-              #'null
-              (list (when (> f 0) (- square dir -1))  ; pawn to left
-                    (when (< f 7) (- square dir +1))  ; pawn to right
-                    ))))
+              (remove-if
+               #'null
+               (list (when (> f 0) (- square dir -1)) ; pawn to left
+                     (when (< f 7) (- square dir +1)) ; pawn to right
+                     ))))
        (some (lambda (from)
                (and (on-board-p from)
                     (let ((p (piece-at state from)))
@@ -257,6 +274,10 @@
            +king-offsets+))))
 
 (defun ray-finds-attacker-p (state from-square attacker-color direction attacker-types)
+  (declare (type mailbox-index from-square)
+	   (type color attacker-color)
+	   (type cons direction)
+	   (type list attacker-types))
   (let ((dr (car direction))
 	(df (cdr direction)))
     (iterate

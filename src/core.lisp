@@ -16,23 +16,18 @@
 
 (declaim (inline make-piece))
 (defun make-piece (color type)
-    (let ((color (if (eql color :white) +white+ +black+))
-	  (type (case type
-		  (:pawn +pawn+)
-		  (:rook +rook+)
-		  (:knight +knight+)
-		  (:bishop +bishop+)
-		  (:queen +queen+)
-		  (:king +king+)
-		  (:empty +empty+))))
-    (logior color type)))
+  (declare (type color color)
+	   (type piece type))
+  (logior color type))
 
 (declaim (inline piece-color))
 (defun piece-color (piece)
+  (declare (type piece piece))
   (logand piece 8))
 
 (declaim (inline piece-type))
 (defun piece-type (piece)
+  (declare (type piece piece))
   (logand piece 7))
 
 ;; More commonly known as "position", but that's a reserved name
@@ -73,7 +68,7 @@
     :type (unsigned-byte 64))
    (black-king #x1000000000000000
     :type (unsigned-byte 64))
-   
+
    ;; Other misc. things
    (turn +white+ :type color)
    (castling-rights #b1111 :type (unsigned-byte 4))
@@ -82,11 +77,13 @@
    (fullmove-number 1 :type (integer 1)))
 
 (defun clear-piece-at! (state square)
-  (declare (type (integer 0 63) square))
+  (declare (type mailbox-index square))
   (update-bitboard state (piece-at state square) (lognot (ash 1 square)) logand)
   (setf (aref (state-mailbox state) square) +empty+))
 
 (defun set-piece-at! (state square piece)
+  (declare (type mailbox-index square)
+	   (type piece piece))
   (update-bitboard state piece (ash 1 square) logior)
   (setf (aref (state-mailbox state) square) piece))
 

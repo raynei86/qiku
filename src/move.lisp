@@ -9,13 +9,13 @@
 (defstruct move
   (from 0 :type (integer 0 63))
   (to 0 :type (integer 0 63))
-  (piece nil :type integer)
-  (captured nil :type (or null integer))
-  (promotion nil :type (or null integer))
+  (piece nil :type piece)
+  (captured nil :type (or null piece))
+  (promotion nil :type (or null piece))
   (flags 0 :type (unsigned-byte 5))
   (old-ep-square nil :type (or null (integer 0 63)))
-  (old-castling-rights #b00000 :type (unsigned-byte 5))
-  (old-halfmove-clock 0 :type integer))
+  (old-castling-rights #b00000 :type (unsigned-byte 4))
+  (old-halfmove-clock 0 :type (integer 0)))
 
 (defun do-move! (state move)
   (let* ((from (move-from move))
@@ -112,27 +112,36 @@
 
 (declaim (inline castling-rook-from))
 (defun castling-rook-from (king-from king-to)
+  (declare (type mailbox-index king-from king-to))
   (if (> king-to king-from)
       (if (= king-from 4) 7 63)		; h1 or h8
       (if (= king-from 4) 0 56))) ; a1 or a8
 
 (declaim (inline castling-rook-to))
 (defun castling-rook-to (king-from king-to)
+  (declare (type mailbox-index king-from king-to))
   (if (> king-to king-from)
       (if (= king-from 4) 5 61)		; f1 or f8
       (if (= king-from 4) 3 59))) ; d1 or d8
 
+(declaim (inline castling-rook-from))
 (defun compute-castling-rights (rights from to piece-type piece-color captured-type)
-  "Return updated castling rights after a move; does not mutate anything."
+    "Return updated castling rights after a move; does not mutate anything."
+  (declare (type (unsigned-byte 4) rights)
+	   (type mailbox-index from to)
+	   (type piece piece-type)
+	   (type (or null piece) captured-type)
+	   (type color piece-color))
+
   (let ((r rights))
     ;; King move strips both rights for that side
     (when (eql piece-type +king+)
       (setf r (logand r (if (eql piece-color +white+) #b0011 #b1100))))
     ;; Rook leaving its home square strips one right
     (when (eql piece-type +rook+)
-      (cond ((= from 0)  (setf r (logand r #b1011)))   ; white queenside
-            ((= from 7)  (setf r (logand r #b0111)))   ; white kingside
-            ((= from 56) (setf r (logand r #b1110)))   ; black queenside
+      (cond ((= from 0)  (setf r (logand r #b1011))) ; white queenside
+            ((= from 7)  (setf r (logand r #b0111))) ; white kingside
+            ((= from 56) (setf r (logand r #b1110))) ; black queenside
             ((= from 63) (setf r (logand r #b1101))))) ; black kingside
     ;; Rook captured on its home square strips one right
     (when (eql captured-type +rook+)

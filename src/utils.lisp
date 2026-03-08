@@ -3,22 +3,23 @@
 
 ;; Bitboard and state utils
 (defun generate-piece (piece-list)
+  (declare (type cons piece-list))
   (iterate
     (for p in piece-list)
     (for piece = (case p
-		   (bp (make-piece :black :pawn ))
-		   (wp (make-piece :white :pawn ))
-		   (br (make-piece :black :rook ))
-		   (wr (make-piece :white :rook ))
-		   (bn (make-piece :black :knight ))
-		   (wn (make-piece :white :knight ))
-		   (bb (make-piece :black :bishop ))
-		   (wb (make-piece :white :bishop ))
-		   (bq (make-piece :black :queen ))
-		   (wq (make-piece :white :queen ))
-		   (bk (make-piece :black :king ))
-		   (wk (make-piece :white :king ))
-		   (otherwise (make-piece :white :empty))))
+		   (bp (make-piece +black+ +pawn+ ))
+		   (wp (make-piece +white+ +pawn+ ))
+		   (br (make-piece +black+ +rook+ ))
+		   (wr (make-piece +white+ +rook+ ))
+		   (bn (make-piece +black+ +knight+ ))
+		   (wn (make-piece +white+ +knight+ ))
+		   (bb (make-piece +black+ +bishop+ ))
+		   (wb (make-piece +white+ +bishop+ ))
+		   (bq (make-piece +black+ +queen+ ))
+		   (wq (make-piece +white+ +queen+ ))
+		   (bk (make-piece +black+ +king+ ))
+		   (wk (make-piece +white+ +king+ ))
+		   (otherwise (make-piece +white+ +empty+))))
     (collect piece result-type (simple-array (unsigned-byte 4) (64)))))
 
 (defmacro update-bitboard (state piece bit op)
@@ -49,13 +50,20 @@
 
 ;; Move related utils
 (defun make-quiet (from to piece)
+  (declare (type mailbox-index from to)
+	   (type piece piece))
   (make-move :from from :to to :piece piece))
 
 (defun make-capture (from to piece captured)
+  (declare (type mailbox-index from to)
+	   (type piece piece captured))
   (make-move :from from :to to :piece piece
              :captured captured :flags +capture-flag+))
 
 (defun make-promotion (from to piece captured promo-type color)
+    (declare (type mailbox-index from to)
+	     (type piece piece captured promo-type)
+	     (type color color))
   (make-move :from from :to to :piece piece
              :captured captured
              :promotion (make-piece color promo-type)
@@ -64,6 +72,7 @@
 
 (declaim (inline square-occupied-p))
 (defun square-occupied-p (state square)
+  (declare (type mailbox-index square))
   (/= +empty+ (piece-at state square)))
 
 (declaim (inline square-occupied-by-p))
@@ -79,12 +88,15 @@
   (declare (type color color))
   (logxor color 8))
 
-(declaim (inline square-rank))
+(declaim (inline square-rank)
+	 (ftype (function (mailbox-index) (integer 0 7)) square-rank))
 (defun square-rank (square)
   (declare (type mailbox-index square))
   (nth-value 0 (floor square 8)))
 
-(declaim (inline square-file))
+(declaim (inline square-file)
+	 (ftype (function (fixnum) mailbox-index) square-file))
+;; Sometimes this is called before a check, so the input type can't be (integer 0 63)..
 (defun square-file (square)
   (mod square 8))
 
