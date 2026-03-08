@@ -11,6 +11,9 @@
 (defconstant +king+ 6)
 
 ;; Pieces are just plain integers
+(deftype piece () '(integer -6 6))
+
+(declaim (inline make-piece))
 (defun make-piece (color type)
   (let ((a (if (eql color :white) +white+ +black+))
 	(b (case type
@@ -23,9 +26,11 @@
 	     (:empty +empty+))))
     (* a b)))
 
+(declaim (inline piece-color))
 (defun piece-color (piece)
   (signum piece))
 
+(declaim (inline piece-type))
 (defun piece-type (piece)
   (abs piece))
 
@@ -43,7 +48,7 @@
 		 00 00 00 00 00 00 00 00
 		 bp bp bp bp bp bp bp bp
 		 br bn bb bq bk bb bn br))
-    :type (simple-vector 64)
+    :type (simple-array (:dimension 64 :element-type piece))
     :documentation "The 8x8 mailbox representation of the board")
    
    ;; Whole bunch of bitboards
@@ -100,7 +105,7 @@
    (turn
     :initarg :turn
     :accessor turn
-    :type integer
+    :type (integer -1 1)
     :initform +white+
     :documentation "The side that is moving")
    (castling-rights

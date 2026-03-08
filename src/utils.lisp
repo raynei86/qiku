@@ -61,6 +61,7 @@
     :halfmove-clock  (halfmove-clock  state)
     :fullmove-number (fullmove-number state)))
 
+(declaim (inline piece-at))
 (defun piece-at (state square)
   (aref (mailbox state) square))
 
@@ -79,19 +80,28 @@
              :flags (logior +promotion-flag+
                             (if captured +capture-flag+ 0))))
 
+(declaim (inline square-occupied-p))
 (defun square-occupied-p (state square)
   (/= +empty+ (piece-at state square)))
 
+(declaim (inline square-occupied-by-p))
 (defun square-occupied-by-p (state square color)
   (= color (piece-color (piece-at state square))))
 
+(declaim (inline enemy-of))
 (defun enemy-of (color)
   (if (= color +white+) +black+ +white+))
 
-(defun square-rank (square) (floor square 8))
+(declaim (inline square-rank))
+(declaim (ftype (function ((integer 0 63)) (integer 0 7)) square-rank))
+(defun square-rank (square)
+  (nth-value 0 (floor square 8)))
 
-(defun square-file (square) (mod square 8))
+(declaim (inline square-file))
+(defun square-file (square)
+  (mod square 8))
 
+(declaim (inline on-board-p))
 (defun on-board-p (square)
   (<= 0 square 63))
 
@@ -99,6 +109,8 @@
   (let ((bb (if (= color +white+) (white-king state) (black-king state))))
     (car (bb-squares bb))))
 
+(declaim (inline bb-squares))
+(declaim (ftype (function ((integer 0 63)) (cons))))
 (defun bb-squares (bb)
   "Return a list of all square indices set in BB."
   (iterate

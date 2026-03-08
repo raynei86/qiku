@@ -12,7 +12,7 @@
   (piece nil :type integer)
   (captured nil :type (or null integer))
   (promotion nil :type (or null integer))
-  (flags 0 :type (unsigned-byte 8)))
+  (flags 0 :type (unsigned-byte 5)))
 
 (defun do-move (state move)
   (let* ((s (copy-state state))
@@ -68,14 +68,17 @@
 
     s))
 
+
+(declaim (inline castling-rook-from))
 (defun castling-rook-from (king-from king-to)
   (if (> king-to king-from)
       (if (= king-from 4) 7 63)		; h1 or h8
       (if (= king-from 4) 0 56))) ; a1 or a8
 
+(declaim (inline castling-rook-to))
 (defun castling-rook-to (king-from king-to)
   (if (> king-to king-from)
-      (if (= king-from 4) 5 61)   ; f1 or f8
+      (if (= king-from 4) 5 61)		; f1 or f8
       (if (= king-from 4) 3 59))) ; d1 or d8
 
 (defun compute-castling-rights (rights from to piece-type piece-color captured-type)
