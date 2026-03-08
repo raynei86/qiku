@@ -47,24 +47,24 @@
            (and captured (piece-type captured))))
 
     ;; Mutations
-    (clear-piece-at s from)
+    (clear-piece-at! s from)
 
     (cond
       ((logtest flags +en-passant-flag+)
-       (clear-piece-at s (if (eql color +white+) (- to 8) (+ to 8))))
+       (clear-piece-at! s (if (eql color +white+) (- to 8) (+ to 8))))
       (captured
-       (clear-piece-at s to)))
+       (clear-piece-at! s to)))
 
     ;; Handle castling
     (when (logtest flags +castling-flag+)
       (let* ((rook-from (castling-rook-from from to))
              (rook-to   (castling-rook-to   from to))
              (rook      (piece-at s rook-from)))
-        (clear-piece-at s rook-from)
-        (set-piece-at   s rook-to   rook)))
+        (clear-piece-at! s rook-from)
+        (set-piece-at!   s rook-to   rook)))
 
     ;; Finally set the piece down
-    (set-piece-at s to (or promotion piece))
+    (set-piece-at! s to (or promotion piece))
 
     s))
 

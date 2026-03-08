@@ -34,8 +34,8 @@
    #:white-pieces
    #:black-pieces
    #:all-pieces
-   #:set-piece-at
-   #:clear-piece-at
+   #:set-piece-at!
+   #:clear-piece-at!
 
    ;; Moves
    #:move

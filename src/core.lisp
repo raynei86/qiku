@@ -133,11 +133,11 @@
 (defmethod all-pieces ((state state))
   (logior (white-pieces state) (black-pieces state)))
 
-(defun clear-piece-at (state square)
+(defun clear-piece-at! (state square)
   (update-bitboard state (piece-at state square) (lognot (ash 1 square)) logand)
   (setf (aref (mailbox state) square) +empty+))
 
-(defun set-piece-at (state square piece)
+(defun set-piece-at! (state square piece)
   (update-bitboard state piece (ash 1 square) logior)
   (setf (aref (mailbox state) square) piece))
 
