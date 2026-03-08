@@ -256,24 +256,23 @@
                            (= (piece-type  p) +king+))))))
            +king-offsets+))))
 
-(defun ray-finds-attacker-p (state from-square attacker-color dir attacker-types)
-  "Walk a ray from FROM-SQ; return T if the first piece found is an attacker."
-  (let ((dr (car dir))
-        (df (cdr dir)))
-    (labels ((walk (cur-square)
-               (let* ((nr (+ (square-rank cur-square) dr))
-                      (nf (+ (square-file cur-square) df)))
-                 (if (or (< nr 0) (> nr 7) (< nf 0) (> nf 7))
-                     nil
-                     (let* ((next-square (+ (* nr 8) nf))
-                            (p       (piece-at state next-square)))
-                       (cond
-                         ((= p +empty+) (walk next-square))
-                         ((and (= (piece-color p) attacker-color)
-                               (member (piece-type p) attacker-types))
-                          t)
-                         (t nil)))))))
-      (walk from-square))))
+(defun ray-finds-attacker-p (state from-square attacker-color direction attacker-types)
+  (let ((dr (car direction))
+	(df (cdr direction)))
+    (iterate
+      (with rank = (square-rank from-square))
+      (with file = (square-file from-square))
+      (setf rank (+ rank dr)
+	    file (+ file df))
+      (while (and (<= 0 rank 7) (<= 0 file 7)))
+      (let* ((target (+ (* rank 8) file))
+	     (piece (piece-at state target)))
+	(cond
+	  ((and (= (piece-color piece) attacker-color)
+		(member (piece-type piece) attacker-types))
+	   (return t))
+	  ((zerop piece) nil)
+	  (t (return nil)))))))
 
 
 ;; Generate all moves
