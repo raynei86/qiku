@@ -1,5 +1,27 @@
-* Qiku  - A chess library in Common Lisp
+* Qiku - A chess library in Common Lisp
 
 ** Usage
+This is at a functional stage where it passes ~perft~ up to depth 6 (last time I checked).
+Exported symbols can be found in ~package.lisp~
 
-Still WIP
+*** Creating positions
+Still at a barebone stage, FEN strings will come soon.
+#+begin_src lisp
+(defparameter *test-state* (qiku:make-state)) ;; Initializes to default position
+#+end_src
+
+*** Moves and move generation
+#+begin_src lisp
+(defparameter *test-state* (qiku:make-state))
+(let ((moves (qiku:generate-legal-moves *test-state*)))
+  (loop
+     for m in moves
+     do ((do-move! (*test-state* m))
+	 (undo-move! (*test-state* m)))))
+#+end_src
+
+*** Perft
+#+begin_src lisp
+(let ((*test-state* (qiku:make-state)))
+  (qiku:perft *test-state* 5))
+#+end_src
