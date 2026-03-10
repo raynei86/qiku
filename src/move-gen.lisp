@@ -6,6 +6,53 @@
 (defconstant +bishop-directions+ '((1 . 1) (1 . -1) (-1 . 1) (-1 . -1)))
 (defconstant +queen-directions+  (append +rook-directions+ +bishop-directions+))
 
+(defparameter *knight-attacks*
+  (iterate
+    (with table = (make-array 64 :element-type '(unsigned-byte 64) :initial-element 0))
+    (for square to 63)
+    (setf (aref table square)
+	  (iterate
+	    (for offset in +knight-offsets+)
+	    (for to = (+ square offset))
+	    (when (and (on-board-p to)
+		       (<= (abs (- (logand to 7) (logand square 7))) 2))
+	      (sum (ash 1 to)))))
+    (finally (return table))))
+
+(defparameter *king-attacks*
+  (iterate
+    (with table = (make-array 64 :element-type '(unsigned-byte 64) :initial-element 0))
+    (for square to 63)
+    (setf (aref table square)
+	  (iterate
+	    (for offset in +king-offsets+)
+	    (for to = (+ square offset))
+	    (when (and (on-board-p to)
+		       (<= (abs (- (logand to 7) (logand square 7))) 1))
+	      (sum (ash 1 to)))))
+    (finally (return table))))
+
+(defparameter *pawn-attacks*
+  (iterate
+    (with table = (make-array '(2 64) :element-type '(unsigned-byte 64) :initial-element 0))
+    (for square to 63)
+    (setf (aref table 0 square)
+	  (iterate
+	    (for offset in '(7 9))
+	    (for to = (+ square offset))
+	    (when (and (< square 56)
+		       (<= (abs (- (logand to 7) (logand square 7))) 1))
+	      (sum (ash 1 to)))))
+    (setf (aref table 1 square)
+	  (iterate
+	    (for offset in '(-7 -9))
+	    (for to = (+ square offset))
+	    (when (and (< square 56)
+		       (<= (abs (- (logand to 7) (logand square 7))) 1))
+	      (sum (ash 1 to)))))
+    (finally (return table))))
+
+
 (defun knight-moves (state color)
   (declare (type color color))
   (let ((knights (bb-squares (if (= color +white+) (state-white-knights state) (state-black-knights state)))))
@@ -223,55 +270,26 @@
   (square-attacked-p state (king-square state color) color))
 
 (defun square-attacked-p (state square defender-color)
-  (declare (type mailbox-index square)
-	   (type color defender-color))
-  (let ((attacker-color (enemy-of defender-color)))
+  (let* ((attacker-color (enemy-of defender-color))
+	 (color-index (if (= attacker-color +white+) 1 0))
+	 (enemy-pawns (enemy-bb state defender-color +pawn+))
+	 (enemy-knights (enemy-bb state defender-color +knight+))
+	 (enemy-king (enemy-bb state defender-color +king+)))
+    (declare (type (unsigned-byte 64) enemy-pawns enemy-knights enemy-king))
+    
     (or
-     ;; Look for enemy pawns on the squares that would attack SQ.
-     (let* ((dir (if (= attacker-color +white+) +8 -8))
-            (f   (square-file square))
-            (candidates
-              (remove-if
-               #'null
-               (list (when (> f 0) (- square dir -1)) ; pawn to left
-                     (when (< f 7) (- square dir +1)) ; pawn to right
-                     ))))
-       (some (lambda (from)
-               (and (on-board-p from)
-                    (let ((p (piece-at state from)))
-                      (and (= (piece-color p) attacker-color)
-                           (= (piece-type  p) +pawn+)))))
-             candidates))
-
-     (some (lambda (offset)
-             (let* ((from   (+ square offset))
-                    (f-diff (abs (- (square-file from) (square-file square)))))
-               (and (on-board-p from)
-                    (member f-diff '(1 2))
-                    (let ((p (piece-at state from)))
-                      (and (= (piece-color p) attacker-color)
-                           (= (piece-type  p) +knight+))))))
-           +knight-offsets+)
-
+     (not (zerop (logand (aref *pawn-attacks* color-index square) enemy-pawns)))
+     (not (zerop (logand (aref *knight-attacks* square) enemy-knights)))
      (some (lambda (dir)
-             (ray-finds-attacker-p state square attacker-color dir
-                                   (list +rook+ +queen+)))
-           +rook-directions+)
-
+	     (ray-finds-attacker-p state square attacker-color dir
+				   (list +rook+ +queen+)))
+	   +rook-directions+)
      (some (lambda (dir)
-             (ray-finds-attacker-p state square attacker-color dir
-                                   (list +bishop+ +queen+)))
-           +bishop-directions+)
+	     (ray-finds-attacker-p state square attacker-color dir
+				   (list +bishop+ +queen+)))
+	   +bishop-directions+)
 
-     (some (lambda (offset)
-             (let* ((from   (+ square offset))
-                    (f-diff (abs (- (square-file from) (square-file square)))))
-               (and (on-board-p from)
-                    (<= f-diff 1)
-                    (let ((p (piece-at state from)))
-                      (and (= (piece-color p) attacker-color)
-                           (= (piece-type  p) +king+))))))
-           +king-offsets+))))
+     (not (zerop (logand (aref *king-attacks* square) enemy-king))))))
 
 (defun ray-finds-attacker-p (state from-square attacker-color direction attacker-types)
   (declare (type mailbox-index from-square)

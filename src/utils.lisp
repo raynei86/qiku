@@ -88,6 +88,26 @@
   (declare (type color color))
   (logxor color 8))
 
+(defun enemy-bb (state friendly-color bb-type)
+  (declare (type color friendly-color)
+	   (type piece bb-type))
+    (let ((enemy-color (enemy-of friendly-color)))
+    (if (= enemy-color +white+)
+	(case bb-type
+	  (#.+pawn+ (state-white-pawns state))
+	  (#.+rook+ (state-white-rooks state))
+	  (#.+knight+ (state-white-knights state))
+	  (#.+bishop+ (state-white-bishops state))
+	  (#.+queen+ (state-white-queens state))
+	  (#.+king+ (state-white-king state)))
+	(case bb-type
+	  (#.+pawn+ (state-black-pawns state))
+	  (#.+rook+ (state-black-rooks state))
+	  (#.+knight+ (state-black-knights state))
+	  (#.+bishop+ (state-black-bishops state))
+	  (#.+queen+ (state-black-queens state))
+	  (#.+king+ (state-black-king state))))))
+
 (declaim (inline square-rank)
 	 (ftype (function (mailbox-index) (integer 0 7)) square-rank))
 (defun square-rank (square)
