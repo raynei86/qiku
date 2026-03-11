@@ -127,10 +127,10 @@
             (when (move-promotion m) (piece-name (move-promotion m))))))
 
 
-(defun checkmate-p (state)
+(defun checkmate-p (state moves)
   (and (king-in-check-p state (state-turn state))
-       (null (generate-legal-moves state))))
+       (null moves)))
 
-(defun stalemate-p (state)
+(defun stalemate-p (state moves)
   (and (not (king-in-check-p state (state-turn state)))
-       (null (generate-legal-moves state))))
+       (null moves)))
