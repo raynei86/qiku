@@ -3,13 +3,14 @@
   :author "Lihui Zhang"
   :mailto "zlihui486@gmail.com"
   :license "LGPL-3"
-  :depends-on ("iterate")
+  :depends-on ("iterate" "serapeum")
   :components ((:module "src"
                 :components
                 ((:file "package")
 		 (:file "core" :depends-on ("package"))
+		 (:file "utils" :depends-on ("core" "package" "move"))
 		 (:file "move" :depends-on ("core" "package"))
-		 (:file "move-gen" :depends-on ("core" "move" "package")))))
+		 (:file "move-gen" :depends-on ("core" "move" "package" "utils")))))
   :description "A chess library in Common Lisp"
   :in-order-to ((test-op (test-op "qiku/tests"))))
 

@@ -1,10 +1,10 @@
 (in-package :qiku)
 
-(defconstant +capture-flag+        #b00001)
-(defconstant +en-passant-flag+     #b00010)
-(defconstant +castling-flag+       #b00100)
-(defconstant +double-pawn-push-flag+ #b01000)
-(defconstant +promotion-flag+      #b10000)
+(serapeum:defconst +capture-flag+        #b00001)
+(serapeum:defconst +en-passant-flag+     #b00010)
+(serapeum:defconst +castling-flag+       #b00100)
+(serapeum:defconst +double-pawn-push-flag+ #b01000)
+(serapeum:defconst +promotion-flag+      #b10000)
 
 (defstruct move
   (from 0 :type (integer 0 63))
@@ -110,29 +110,23 @@
     state))
 
 
-(declaim (inline castling-rook-from))
+(declaim (ftype (function (mailbox-index mailbox-index) mailbox-index) castling-rook-from) (inline castling-rook-from))
 (defun castling-rook-from (king-from king-to)
-  (declare (type mailbox-index king-from king-to))
   (if (> king-to king-from)
       (if (= king-from 4) 7 63)		; h1 or h8
       (if (= king-from 4) 0 56))) ; a1 or a8
 
-(declaim (inline castling-rook-to))
+(declaim (ftype (function (mailbox-index mailbox-index) mailbox-index) castling-rook-to)   (inline castling-rook-to))
 (defun castling-rook-to (king-from king-to)
-  (declare (type mailbox-index king-from king-to))
   (if (> king-to king-from)
       (if (= king-from 4) 5 61)		; f1 or f8
       (if (= king-from 4) 3 59))) ; d1 or d8
 
-(declaim (inline castling-rook-from))
+(declaim (ftype (function ((unsigned-byte 4) mailbox-index mailbox-index piece color (or null piece))
+                          (unsigned-byte 4))
+                compute-castling-rights))
 (defun compute-castling-rights (rights from to piece-type piece-color captured-type)
-    "Return updated castling rights after a move; does not mutate anything."
-  (declare (type (unsigned-byte 4) rights)
-	   (type mailbox-index from to)
-	   (type piece piece-type)
-	   (type (or null piece) captured-type)
-	   (type color piece-color))
-
+  "Return updated castling rights after a move; does not mutate anything."
   (let ((r rights))
     ;; King move strips both rights for that side
     (when (eql piece-type +king+)

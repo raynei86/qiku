@@ -1,12 +1,12 @@
 (in-package :qiku)
 
-(defconstant +knight-offsets+ '(+17 +15 +10 +6 -6 -10 -15 -17))
-(defconstant +king-offsets+ '(+9 +8 +7 +1 -1 -7 -8 -9))
-(defconstant +rook-directions+   '((1 . 0) (-1 . 0) (0 . 1) (0 . -1)))
-(defconstant +bishop-directions+ '((1 . 1) (1 . -1) (-1 . 1) (-1 . -1)))
-(defconstant +queen-directions+  (append +rook-directions+ +bishop-directions+))
+(serapeum:defconst +knight-offsets+ '(+17 +15 +10 +6 -6 -10 -15 -17))
+(serapeum:defconst +king-offsets+ '(+9 +8 +7 +1 -1 -7 -8 -9))
+(serapeum:defconst +rook-directions+   '((1 . 0) (-1 . 0) (0 . 1) (0 . -1)))
+(serapeum:defconst +bishop-directions+ '((1 . 1) (1 . -1) (-1 . 1) (-1 . -1)))
+(serapeum:defconst +queen-directions+  (append +rook-directions+ +bishop-directions+))
 
-(defparameter *knight-attacks*
+(serapeum:defconst *knight-attacks*
   (iterate
     (with table = (make-array 64 :element-type '(unsigned-byte 64) :initial-element 0))
     (for square to 63)
@@ -19,7 +19,7 @@
 	      (sum (ash 1 to)))))
     (finally (return table))))
 
-(defparameter *king-attacks*
+(serapeum:defconst *king-attacks*
   (iterate
     (with table = (make-array 64 :element-type '(unsigned-byte 64) :initial-element 0))
     (for square to 63)
@@ -32,7 +32,7 @@
 	      (sum (ash 1 to)))))
     (finally (return table))))
 
-(defparameter *pawn-attacks*
+(serapeum:defconst *pawn-attacks*
   (iterate
     (with table = (make-array '(2 64) :element-type '(unsigned-byte 64) :initial-element 0))
     (for square to 63)
@@ -52,9 +52,8 @@
 	      (sum (ash 1 to)))))
     (finally (return table))))
 
-
+(declaim (ftype (function (state color) list) knight-moves))
 (defun knight-moves (state color)
-  (declare (type color color))
   (let ((knights (bb-squares (if (= color +white+) (state-white-knights state) (state-black-knights state)))))
     (mapcan (lambda (square) (knight-moves-from state square color)) knights)))
 
@@ -82,11 +81,8 @@
 	    (ray-in-direction state square piece color direction))
 	  directions))
 
+(declaim (ftype (function (state mailbox-index piece color cons) list) ray-in-direction))
 (defun ray-in-direction (state square piece color direction)
-  (declare (type mailbox-index square)
-	   (type piece piece)
-	   (type color color)
-	   (type cons direction))
   (let ((dr (car direction))
 	(df (cdr direction)))
     (iterate
@@ -128,11 +124,8 @@
 	 (pawns (bb-squares (if (= color +white+) (state-white-pawns state) (state-black-pawns state)))))
     (mapcan (lambda (square) (pawn-moves-from state square color direction start-rank promo-rank)) pawns)))
 
+(declaim (ftype (function (state mailbox-index color (integer -8 8) (integer 0 7) (integer 0 7)) list) pawn-moves-from))
 (defun pawn-moves-from (state square color direction start-rank promo-rank)
-  (declare (type mailbox-index square)
-	   (type color color)
-	   (type (integer -8 +8) direction)
-	   (type (integer 0 7) start-rank promo-rank))
   (let* ((piece (piece-at state square))
 	 (push1 (+ square direction))
 	 (push2 (+ square direction direction))
@@ -175,9 +168,8 @@
 		result))))
     result))
 
+(declaim (ftype (function (mailbox-index (integer -8 8)) list) pawn-capture-squares))
 (defun pawn-capture-squares (square direction)
-  (declare (type mailbox-index square)
-	   (type (integer -8 +8) direction))
   (let ((file (square-file square)))
     (list (if (> file 0) (+ square direction -1) -1)
 	  (if (< file 7) (+ square direction +1) -1))))
@@ -194,9 +186,8 @@
      (king-step-moves state king-square color)
      (castling-moves state king-square color))))
 
+(declaim (ftype (function (state mailbox-index color) list) king-step-moves))
 (defun king-step-moves (state square color)
-  (declare (type mailbox-index square)
-	   (type color color))
   (let* ((piece (piece-at state square))
 	 (file (square-file square)))
     (mapcan (lambda (offset)
@@ -214,9 +205,8 @@
 			 (make-quiet square to piece)))))))
 	    +king-offsets+)))
 
+(declaim (ftype (function (state mailbox-index color) list) castling-moves))
 (defun castling-moves (state square color)
-  (declare (type mailbox-index square)
-	   (type color color))
   (let ((rights (state-castling-rights state))
 	(piece (piece-at state square))
         (result '()))
@@ -291,11 +281,8 @@
 
      (not (zerop (logand (aref *king-attacks* square) enemy-king))))))
 
+(declaim (ftype (function (state mailbox-index color cons list) boolean) ray-finds-attacker-p))
 (defun ray-finds-attacker-p (state from-square attacker-color direction attacker-types)
-  (declare (type mailbox-index from-square)
-	   (type color attacker-color)
-	   (type cons direction)
-	   (type list attacker-types))
   (let ((dr (car direction))
 	(df (cdr direction)))
     (iterate
