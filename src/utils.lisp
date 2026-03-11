@@ -1,8 +1,6 @@
 ;;; Big file of crap so I can keep the implementation cleaner
 (in-package :qiku)
 
-;; Bitboard and state utils
-
 (declaim (ftype (function (state mailbox-index) piece) piece-at)
 	 (inline piece-at))
 (defun piece-at (state square)

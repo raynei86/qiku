@@ -177,7 +177,7 @@
 (defun promotion-moves (from to piece captured color)
   (mapcar (lambda (type)
 	    (make-promotion from to piece captured type color))
-	  '(+rook+ +knight+ +bishop+ +queen+)))
+	  '(#.+rook+ #.+knight+ #.+bishop+ #.+queen+)))
 
 
 (defun king-moves (state color)
