@@ -75,16 +75,6 @@
    (halfmove-clock 0 :type (integer 0 *))
    (fullmove-number 1 :type (integer 1)))
 
-(declaim (ftype (function (state mailbox-index) t) clear-piece-at!))
-(defun clear-piece-at! (state square)
-  (update-bitboard state (piece-at state square) (lognot (ash 1 square)) logand)
-  (setf (aref (state-mailbox state) square) +empty+))
-
-(declaim (ftype (function (state mailbox-index piece) t) set-piece-at!))
-(defun set-piece-at! (state square piece)
-  (update-bitboard state piece (ash 1 square) logior)
-  (setf (aref (state-mailbox state) square) piece))
-
 (defun generate-piece (piece-list)
   (declare (type cons piece-list))
   (iterate
@@ -125,3 +115,13 @@
         (#.+queen+  (setf (state-black-queens ,state) (,op (state-black-queens ,state) ,bit)))
         (#.+king+   (setf (state-black-king ,state) (,op (state-black-king ,state) ,bit)))))
      (otherwise nil)))
+
+(declaim (ftype (function (state mailbox-index) t) clear-piece-at!))
+(defun clear-piece-at! (state square)
+  (update-bitboard state (piece-at state square) (lognot (ash 1 square)) logand)
+  (setf (aref (state-mailbox state) square) +empty+))
+
+(declaim (ftype (function (state mailbox-index piece) t) set-piece-at!))
+(defun set-piece-at! (state square piece)
+  (update-bitboard state piece (ash 1 square) logior)
+  (setf (aref (state-mailbox state) square) piece))
