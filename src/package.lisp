@@ -3,9 +3,11 @@
   (:export
    ;; Pieces
    #:make-piece
+   #:make-state
    #:generate-piece
    #:piece-color
    #:piece-type
+   #:piece-at
    #:+white+
    #:+black+
    #:+empty+
@@ -19,18 +21,22 @@
    ;; Position
    #:state
    #:mailbox
-   #:white-pawns
-   #:white-knights
-   #:white-bishops
-   #:white-rooks
-   #:white-queens
-   #:white-king
-   #:black-pawns
-   #:black-knights
-   #:black-bishops
-   #:black-rooks
-   #:black-queens
-   #:black-king
+   #:state-white-pawns
+   #:state-white-knights
+   #:state-white-bishops
+   #:state-white-rooks
+   #:state-white-queens
+   #:state-white-king
+   #:state-black-pawns
+   #:state-black-knights
+   #:state-black-bishops
+   #:state-black-rooks
+   #:state-black-queens
+   #:state-black-king
+   #:state-turn
+   #:state-ep-square
+   #:state-halfmove-clock
+   #:state-fullmove-number
    #:set-piece-at!
    #:clear-piece-at!
 
@@ -65,4 +71,3 @@
    #:stalemate-p))
 
 (in-package #:qiku)
-
