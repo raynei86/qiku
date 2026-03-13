@@ -79,6 +79,7 @@
    #:+file-mask+
    #:+rank-mask+
    #:adjacent-files-mask
-   #:adjacent-ranks-mask))
+   #:adjacent-ranks-mask
+   #:distance))
 
 (in-package #:qiku)

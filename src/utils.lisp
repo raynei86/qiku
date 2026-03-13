@@ -95,13 +95,24 @@
   (and (not (king-in-check-p state (state-turn state)))
        (null moves)))
 
+(declaim (inline adjacent-files-mask)
+	 (ftype (function ((integer 0 7)) (unsigned-byte 64)) adjacent-files-mask))
 (defun adjacent-files-mask (file)
   (logior (if (> file 0) (aref +file-masks+ (1- file)) 0)
 	  (if (< file 7) (aref +file-masks+ (1+ file)) 0)))
 
+(declaim (inline adjacent-ranks-mask)
+	 (ftype (function ((integer 0 7)) (unsigned-byte 64)) adjacent-ranks-mask))
 (defun adjacent-ranks-mask (rank)
   (logior (if (> rank 0) (aref +rank-masks+ (1- rank)) 0)
 	  (if (< rank 7) (aref +rank-masks+ (1+ rank)) 0)))
+
+(declaim (inline distance)
+	 (ftype (function (mailbox-index mailbox-index) mailbox-index) distance))
+(defun distance (square1 square2)
+  (max
+   (abs (- (square-rank square2) (square-rank square1)))
+   (abs (- (square-file square2) (square-file square1)))))
 
 ;; Formatting related utils
 (defun square->algebraic (square)
