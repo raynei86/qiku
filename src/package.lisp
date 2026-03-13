@@ -20,7 +20,7 @@
 
    ;; Position
    #:state
-   #:mailbox
+   #:state-mailbox
    #:state-white-pawns
    #:state-white-knights
    #:state-white-bishops
@@ -34,6 +34,7 @@
    #:state-black-queens
    #:state-black-king
    #:state-turn
+   #:state-castling-rights
    #:state-ep-square
    #:state-halfmove-clock
    #:state-fullmove-number
@@ -42,6 +43,12 @@
 
    ;; Moves
    #:move
+   #:move-from
+   #:move-to
+   #:move-piece
+   #:move-captured
+   #:move-promotion
+   #:move-flags
    #:do-move!
    #:undo-move!
    #:+capture-flag+
@@ -61,13 +68,17 @@
    #:generate-legal-moves
    
    ;; Utils
-   #:square-algebraic
+   #:square->algebraic
    #:king-square
    #:square-rank
    #:square-file
    #:square-occupied-p
    #:square-occupied-by-p
    #:checkmate-p
-   #:stalemate-p))
+   #:stalemate-p
+   #:+file-mask+
+   #:+rank-mask+
+   #:adjacent-files-mask
+   #:adjacent-ranks-mask))
 
 (in-package #:qiku)

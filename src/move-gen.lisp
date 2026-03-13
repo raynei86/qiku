@@ -1,57 +1,5 @@
 (in-package :qiku)
 
-(serapeum:defconst +knight-offsets+ '(+17 +15 +10 +6 -6 -10 -15 -17))
-(serapeum:defconst +king-offsets+ '(+9 +8 +7 +1 -1 -7 -8 -9))
-(serapeum:defconst +rook-directions+   '((1 . 0) (-1 . 0) (0 . 1) (0 . -1)))
-(serapeum:defconst +bishop-directions+ '((1 . 1) (1 . -1) (-1 . 1) (-1 . -1)))
-(serapeum:defconst +queen-directions+  (append +rook-directions+ +bishop-directions+))
-
-(serapeum:defconst *knight-attacks*
-  (iterate
-    (with table = (make-array 64 :element-type '(unsigned-byte 64) :initial-element 0))
-    (for square to 63)
-    (setf (aref table square)
-	  (iterate
-	    (for offset in +knight-offsets+)
-	    (for to = (+ square offset))
-	    (when (and (on-board-p to)
-		       (<= (abs (- (logand to 7) (logand square 7))) 2))
-	      (sum (ash 1 to)))))
-    (finally (return table))))
-
-(serapeum:defconst *king-attacks*
-  (iterate
-    (with table = (make-array 64 :element-type '(unsigned-byte 64) :initial-element 0))
-    (for square to 63)
-    (setf (aref table square)
-	  (iterate
-	    (for offset in +king-offsets+)
-	    (for to = (+ square offset))
-	    (when (and (on-board-p to)
-		       (<= (abs (- (logand to 7) (logand square 7))) 1))
-	      (sum (ash 1 to)))))
-    (finally (return table))))
-
-(serapeum:defconst *pawn-attacks*
-  (iterate
-    (with table = (make-array '(2 64) :element-type '(unsigned-byte 64) :initial-element 0))
-    (for square to 63)
-    (setf (aref table 0 square)
-	  (iterate
-	    (for offset in '(7 9))
-	    (for to = (+ square offset))
-	    (when (and (< square 56)
-		       (<= (abs (- (logand to 7) (logand square 7))) 1))
-	      (sum (ash 1 to)))))
-    (setf (aref table 1 square)
-	  (iterate
-	    (for offset in '(-7 -9))
-	    (for to = (+ square offset))
-	    (when (and (< square 56)
-		       (<= (abs (- (logand to 7) (logand square 7))) 1))
-	      (sum (ash 1 to)))))
-    (finally (return table))))
-
 (declaim (ftype (function (state color) list) knight-moves))
 (defun knight-moves (state color)
   (let ((knights (bb-squares (if (= color +white+) (state-white-knights state) (state-black-knights state)))))
@@ -268,8 +216,8 @@
     (declare (type (unsigned-byte 64) enemy-pawns enemy-knights enemy-king))
     
     (or
-     (not (zerop (logand (aref *pawn-attacks* color-index square) enemy-pawns)))
-     (not (zerop (logand (aref *knight-attacks* square) enemy-knights)))
+     (not (zerop (logand (aref +pawn-attacks+ color-index square) enemy-pawns)))
+     (not (zerop (logand (aref +knight-attacks+ square) enemy-knights)))
      (some (lambda (dir)
 	     (ray-finds-attacker-p state square attacker-color dir
 				   (list +rook+ +queen+)))
@@ -279,7 +227,7 @@
 				   (list +bishop+ +queen+)))
 	   +bishop-directions+)
 
-     (not (zerop (logand (aref *king-attacks* square) enemy-king))))))
+     (not (zerop (logand (aref +king-attacks+ square) enemy-king))))))
 
 (declaim (ftype (function (state mailbox-index color cons list) boolean) ray-finds-attacker-p))
 (defun ray-finds-attacker-p (state from-square attacker-color direction attacker-types)

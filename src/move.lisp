@@ -1,11 +1,5 @@
 (in-package :qiku)
 
-(serapeum:defconst +capture-flag+        #b00001)
-(serapeum:defconst +en-passant-flag+     #b00010)
-(serapeum:defconst +castling-flag+       #b00100)
-(serapeum:defconst +double-pawn-push-flag+ #b01000)
-(serapeum:defconst +promotion-flag+      #b10000)
-
 (defstruct move
   (from 0 :type (integer 0 63))
   (to 0 :type (integer 0 63))

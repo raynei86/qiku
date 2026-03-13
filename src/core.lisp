@@ -4,16 +4,6 @@
 (deftype color () '(integer 0 8))
 (deftype mailbox-index () '(integer 0 63))
 
-(serapeum:defconst +white+ 0)
-(serapeum:defconst +black+ 8)
-(serapeum:defconst +empty+ 0)
-(serapeum:defconst +pawn+  1)
-(serapeum:defconst +rook+  2)
-(serapeum:defconst +knight+ 3)
-(serapeum:defconst +bishop+ 4)
-(serapeum:defconst +queen+ 5)
-(serapeum:defconst +king+  6)
-
 (declaim (ftype (function (color piece) piece) make-piece)
 	 (inline make-piece))
 (defun make-piece (color type)

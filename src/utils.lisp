@@ -1,6 +1,7 @@
 ;;; Big file of crap so I can keep the implementation cleaner
 (in-package :qiku)
 
+;; Piece related utils
 (declaim (ftype (function (state mailbox-index) piece) piece-at)
 	 (inline piece-at))
 (defun piece-at (state square)
@@ -16,7 +17,7 @@
   (make-move :from from :to to :piece piece
              :captured captured :flags +capture-flag+))
 
-(declaim (ftype (function (mailbox-index mailbox-index piece piece piece color) move) make-promotion))
+(declaim (ftype (function (mailbox-index mailbox-index piece (or null piece) (or null piece) color) move) make-promotion))
 (defun make-promotion (from to piece captured promo-type color)
   (make-move :from from :to to :piece piece
              :captured captured
@@ -24,6 +25,7 @@
              :flags (logior +promotion-flag+
                             (if captured +capture-flag+ 0))))
 
+;; Board related utils
 (declaim (ftype (function (state mailbox-index) boolean) square-occupied-p)    (inline square-occupied-p))
 (defun square-occupied-p (state square)
   (/= +empty+ (piece-at state square)))
@@ -65,7 +67,6 @@
   (nth-value 0 (floor square 8)))
 
 (declaim (ftype (function (fixnum) mailbox-index) square-file))
-;; Sometimes this is called before a check, so the input type can't be (integer 0 63)..
 (defun square-file (square)
   (mod square 8))
 
@@ -76,6 +77,7 @@
 (defun king-square (state color)
   (let ((bb (if (= color +white+) (state-white-king state) (state-black-king state))))
     (declare (type (unsigned-byte 64) bb))
+    (when (zerop bb) (return-from king-square 0))
     (1- (integer-length bb))))
 
 (declaim (ftype (function ((unsigned-byte 64)) (cons))))
@@ -85,9 +87,24 @@
     (until (zerop b))
     (collect (1- (integer-length (logand b (- b)))))))
 
+(defun checkmate-p (state &optional (moves t))
+  (and (king-in-check-p state (state-turn state))
+       (null moves)))
+
+(defun stalemate-p (state &optional (moves t))
+  (and (not (king-in-check-p state (state-turn state)))
+       (null moves)))
+
+(defun adjacent-files-mask (file)
+  (logior (if (> file 0) (aref +file-masks+ (1- file)) 0)
+	  (if (< file 7) (aref +file-masks+ (1+ file)) 0)))
+
+(defun adjacent-ranks-mask (rank)
+  (logior (if (> rank 0) (aref +rank-masks+ (1- rank)) 0)
+	  (if (< rank 7) (aref +rank-masks+ (1+ rank)) 0)))
+
 ;; Formatting related utils
 (defun square->algebraic (square)
-  "Convert a square index (0=a1) to a string like \"e4\"."
   (let ((file (square-file square))
         (rank (square-rank square)))
     (format nil "~c~d"
@@ -125,10 +142,3 @@
             (when (move-promotion m) (piece-name (move-promotion m))))))
 
 
-(defun checkmate-p (state moves)
-  (and (king-in-check-p state (state-turn state))
-       (null moves)))
-
-(defun stalemate-p (state moves)
-  (and (not (king-in-check-p state (state-turn state)))
-       (null moves)))
