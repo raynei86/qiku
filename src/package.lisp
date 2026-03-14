@@ -66,8 +66,23 @@
    #:square-attacked-p
    #:generate-pseudolegal-moves
    #:generate-legal-moves
+
+   ;; UCI
+   #:uci-engine
+   #:engine-name
+   #:engine-author
+   #:engine-state
+   #:engine-options
+   #:search-best-move
+   #:on-new-game
+   #:on-position
+   #:on-quit
+   #:uci-send
+   #:uci-info
+   #:uci-loop
    
    ;; Utils
+   #:bb-squares
    #:square->algebraic
    #:king-square
    #:square-rank
@@ -76,8 +91,8 @@
    #:square-occupied-by-p
    #:checkmate-p
    #:stalemate-p
-   #:+file-mask+
-   #:+rank-mask+
+   #:+file-masks+
+   #:+rank-masks+
    #:adjacent-files-mask
    #:adjacent-ranks-mask
    #:distance))
