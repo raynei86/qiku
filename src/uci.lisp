@@ -24,7 +24,7 @@
   (:documentation "Return the best move for current position at depth. Must be specialized."))
 
 (defgeneric on-new-game (engine)
-  (:documentation "Called on `ucinewgame`. Reset any engine-specific state or history.")
+  (:documentation "Called on `ucinewgame`. Reset any engine-specific state.")
   (:method ((engine uci-engine))
     ;; Currently just creating a new `position` object is enough
     (setf (engine-position engine) (make-position))))
