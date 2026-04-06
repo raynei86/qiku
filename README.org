@@ -12,6 +12,11 @@ Exported symbols can be found in ~package.lisp~
 | ~state-turn~     | ~position-turn~  |
 | ~state-mailbox~  | ~position-mailbox~ |
 
+** Performance and SBCL optimization notes
+- Target benchmark remains ~perft(6)~ improvement from ~90s~ to ~60s~ on Thinkpad T480.
+- SBCL-specific optimizations are acceptable for this project because the performance target is runtime-specific and ~perft~ is a hot path where SBCL type declarations and inlining can materially reduce allocation and dispatch overhead.
+- Keep SBCL-specific tuning isolated to hot modules so portability can still be revisited later.
+
 *** Creating positions
 Still at a barebone stage, FEN strings will come soon.
 #+begin_src lisp
