@@ -95,8 +95,35 @@
    #:stalemate-p
    #:+file-masks+
    #:+rank-masks+
-   #:adjacent-files-mask
-   #:adjacent-ranks-mask
-   #:distance))
+    #:adjacent-files-mask
+    #:adjacent-ranks-mask
+    #:distance))
 
 (in-package #:qiku)
+
+(defpackage :qiku.coalton
+  (:use :cl)
+  (:export
+   #:coalton-position
+   #:coalton-position-cl-position
+   #:make-position
+   #:position-p
+   #:piece-at
+   #:set-piece-at!
+   #:clear-piece-at!
+   #:position-turn
+   #:position-castling-rights
+   #:position-ep-square
+   #:position-halfmove-clock
+   #:position-fullmove-number
+   #:generate-pseudolegal-moves
+   #:generate-legal-moves
+   #:do-move!
+   #:undo-move!
+   #:king-in-check-p
+   #:square-attacked-p
+   #:checkmate-p
+   #:stalemate-p
+   #:perft
+   #:make-uci-engine
+   #:coalton-uci-engine))

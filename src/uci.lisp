@@ -24,7 +24,7 @@
   (:documentation "Return the best move for current position at depth. Must be specialized."))
 
 (defgeneric on-new-game (engine)
-  (:documentation "Called on `ucinewgame`. Reset any engine-specific position.")
+  (:documentation "Called on `ucinewgame`. Reset any engine-specific state or history.")
   (:method ((engine uci-engine))
     ;; Currently just creating a new `position` object is enough
     (setf (engine-position engine) (make-position))))
@@ -73,7 +73,7 @@
 
 (defun handle-go (engine tokens)
   "Call `search-best-move` based on depth from tokens and print out best move. Default depth is 15."
-  (let* ((depth-pos (position "depth" tokens :test #'string=))
+  (let* ((depth-pos (cl:position "depth" tokens :test #'string=))
 	 (depth (if depth-pos
 		    (parse-integer (nth (1+ depth-pos) tokens))
 		    15)))
@@ -93,7 +93,7 @@
 (defun handle-position (engine tokens)
   "Handle position by resetting position and replaying moves."
   (setf (engine-position engine) (make-position))
-  (let ((moves-pos (position "moves" tokens :test #'string=)))
+  (let ((moves-pos (cl:position "moves" tokens :test #'string=)))
     (when moves-pos
       (apply-moves (engine-position engine)
                    (subseq tokens (1+ moves-pos)))))
@@ -118,5 +118,3 @@
       ("position" (handle-position engine rest))
       ("go" (handle-go engine rest))
       ("quit" (on-quit engine) (return)))))
-
-
