@@ -73,9 +73,9 @@
 
 (defun handle-go (engine tokens)
   "Call `search-best-move` based on depth from tokens and print out best move. Default depth is 15."
-  (let* ((depth-pos (cl:position "depth" tokens :test #'string=))
-	 (depth (if depth-pos
-		    (parse-integer (nth (1+ depth-pos) tokens))
+  (let* ((depth-index (cl:position "depth" tokens :test #'string=))
+	 (depth (if depth-index
+		    (parse-integer (nth (1+ depth-index) tokens))
 		    15)))
     (let ((move (search-best-move engine (engine-position engine) depth)))
       (if move
@@ -93,10 +93,10 @@
 (defun handle-position (engine tokens)
   "Handle position by resetting position and replaying moves."
   (setf (engine-position engine) (make-position))
-  (let ((moves-pos (cl:position "moves" tokens :test #'string=)))
-    (when moves-pos
+  (let ((moves-index (cl:position "moves" tokens :test #'string=)))
+    (when moves-index
       (apply-moves (engine-position engine)
-                   (subseq tokens (1+ moves-pos)))))
+                   (subseq tokens (1+ moves-index)))))
   (on-position engine (engine-position engine)))
 
 (defun uci-loop (engine)

@@ -6,13 +6,13 @@
   :depends-on ("iterate" "serapeum" "str" "coalton")
   :components ((:module "src"
                 :components
-                ((:file "package")
- 		 (:file "core" :depends-on ("package" "constants"))
- 		 (:file "utils" :depends-on ("core" "package" "move"))
- 		 (:file "constants")
- 		 (:file "move" :depends-on ("core" "package" "constants"))
- 		 (:file "move-gen" :depends-on ("core" "move" "package" "utils" "constants"))
- 		 (:file "uci" :depends-on ("core" "move" "constants"))
+                 ((:file "package")
+                  (:file "core" :depends-on ("package" "constants"))
+                  (:file "utils" :depends-on ("core" "package" "move"))
+                  (:file "constants")
+                  (:file "move" :depends-on ("core" "package" "constants"))
+                  (:file "move-gen" :depends-on ("core" "move" "package" "utils" "constants"))
+                  (:file "uci" :depends-on ("core" "move" "constants"))
                  (:module "coalton"
                   :components
                   ((:file "types")
