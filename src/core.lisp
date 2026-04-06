@@ -20,7 +20,7 @@
   (logand piece 7))
 
 ;; More commonly known as "position", but that's a reserved name
-(defstruct state
+(defstruct position
   (mailbox (generate-piece
 	    '(wr wn wb wq wk wb wn wr
 	      wp wp wp wp wp wp wp wp
@@ -85,33 +85,33 @@
 		   (otherwise (make-piece +white+ +empty+))))
     (collect piece result-type (simple-array (unsigned-byte 4) (64)))))
 
-(defmacro update-bitboard (state piece bit op)
+(defmacro update-bitboard (position piece bit op)
   `(case (piece-color ,piece)
      (#.+white+
       (case (piece-type ,piece)
-	(#.+pawn+   (setf (state-white-pawns ,state) (,op (state-white-pawns ,state) ,bit)))
-        (#.+rook+   (setf (state-white-rooks ,state) (,op (state-white-rooks ,state) ,bit)))
-        (#.+knight+ (setf (state-white-knights ,state) (,op (state-white-knights ,state) ,bit)))
-        (#.+bishop+ (setf (state-white-bishops ,state) (,op (state-white-bishops ,state) ,bit)))
-        (#.+queen+  (setf (state-white-queens ,state) (,op (state-white-queens ,state) ,bit)))
-        (#.+king+   (setf (state-white-king ,state) (,op (state-white-king ,state) ,bit)))
+	(#.+pawn+   (setf (position-white-pawns ,position) (,op (position-white-pawns ,position) ,bit)))
+        (#.+rook+   (setf (position-white-rooks ,position) (,op (position-white-rooks ,position) ,bit)))
+        (#.+knight+ (setf (position-white-knights ,position) (,op (position-white-knights ,position) ,bit)))
+        (#.+bishop+ (setf (position-white-bishops ,position) (,op (position-white-bishops ,position) ,bit)))
+        (#.+queen+  (setf (position-white-queens ,position) (,op (position-white-queens ,position) ,bit)))
+        (#.+king+   (setf (position-white-king ,position) (,op (position-white-king ,position) ,bit)))
 	(otherwise nil)))
      (#.+black+
       (case (piece-type ,piece)
-        (#.+pawn+   (setf (state-black-pawns ,state) (,op (state-black-pawns ,state) ,bit)))
-        (#.+rook+   (setf (state-black-rooks ,state) (,op (state-black-rooks ,state) ,bit)))
-        (#.+knight+ (setf (state-black-knights ,state) (,op (state-black-knights ,state) ,bit)))
-        (#.+bishop+ (setf (state-black-bishops ,state) (,op (state-black-bishops ,state) ,bit)))
-        (#.+queen+  (setf (state-black-queens ,state) (,op (state-black-queens ,state) ,bit)))
-        (#.+king+   (setf (state-black-king ,state) (,op (state-black-king ,state) ,bit)))))
+        (#.+pawn+   (setf (position-black-pawns ,position) (,op (position-black-pawns ,position) ,bit)))
+        (#.+rook+   (setf (position-black-rooks ,position) (,op (position-black-rooks ,position) ,bit)))
+        (#.+knight+ (setf (position-black-knights ,position) (,op (position-black-knights ,position) ,bit)))
+        (#.+bishop+ (setf (position-black-bishops ,position) (,op (position-black-bishops ,position) ,bit)))
+        (#.+queen+  (setf (position-black-queens ,position) (,op (position-black-queens ,position) ,bit)))
+        (#.+king+   (setf (position-black-king ,position) (,op (position-black-king ,position) ,bit)))))
      (otherwise nil)))
 
-(declaim (ftype (function (state mailbox-index) t) clear-piece-at!))
-(defun clear-piece-at! (state square)
-  (update-bitboard state (piece-at state square) (lognot (ash 1 square)) logand)
-  (setf (aref (state-mailbox state) square) +empty+))
+(declaim (ftype (function (position mailbox-index) t) clear-piece-at!))
+(defun clear-piece-at! (position square)
+  (update-bitboard position (piece-at position square) (lognot (ash 1 square)) logand)
+  (setf (aref (position-mailbox position) square) +empty+))
 
-(declaim (ftype (function (state mailbox-index piece) t) set-piece-at!))
-(defun set-piece-at! (state square piece)
-  (update-bitboard state piece (ash 1 square) logior)
-  (setf (aref (state-mailbox state) square) piece))
+(declaim (ftype (function (position mailbox-index piece) t) set-piece-at!))
+(defun set-piece-at! (position square piece)
+  (update-bitboard position piece (ash 1 square) logior)
+  (setf (aref (position-mailbox position) square) piece))

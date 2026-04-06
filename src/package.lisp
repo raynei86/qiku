@@ -1,9 +1,10 @@
 (defpackage :qiku
   (:use :cl :iterate)
+  (:shadow #:position)
   (:export
    ;; Pieces
    #:make-piece
-   #:make-state
+   #:make-position
    #:generate-piece
    #:piece-color
    #:piece-type
@@ -19,25 +20,25 @@
    #:+king+
 
    ;; Position
-   #:state
-   #:state-mailbox
-   #:state-white-pawns
-   #:state-white-knights
-   #:state-white-bishops
-   #:state-white-rooks
-   #:state-white-queens
-   #:state-white-king
-   #:state-black-pawns
-   #:state-black-knights
-   #:state-black-bishops
-   #:state-black-rooks
-   #:state-black-queens
-   #:state-black-king
-   #:state-turn
-   #:state-castling-rights
-   #:state-ep-square
-   #:state-halfmove-clock
-   #:state-fullmove-number
+   #:position
+   #:position-mailbox
+   #:position-white-pawns
+   #:position-white-knights
+   #:position-white-bishops
+   #:position-white-rooks
+   #:position-white-queens
+   #:position-white-king
+   #:position-black-pawns
+   #:position-black-knights
+   #:position-black-bishops
+   #:position-black-rooks
+   #:position-black-queens
+   #:position-black-king
+   #:position-turn
+   #:position-castling-rights
+   #:position-ep-square
+   #:position-halfmove-clock
+   #:position-fullmove-number
    #:set-piece-at!
    #:clear-piece-at!
 
@@ -66,12 +67,13 @@
    #:square-attacked-p
    #:generate-pseudolegal-moves
    #:generate-legal-moves
+   #:perft
 
    ;; UCI
    #:uci-engine
    #:engine-name
    #:engine-author
-   #:engine-state
+   #:engine-position
    #:engine-options
    #:search-best-move
    #:on-new-game

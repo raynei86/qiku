@@ -11,7 +11,7 @@
   (old-castling-rights #b00000 :type (unsigned-byte 4))
   (old-halfmove-clock 0 :type (integer 0)))
 
-(defun do-move! (state move)
+(defun do-move! (position move)
   (let* ((from (move-from move))
          (to (move-to move))
          (piece (move-piece move))
@@ -20,55 +20,55 @@
          (flags (move-flags move))
 	 (color (piece-color piece)))
 
-    (setf (move-old-ep-square       move) (state-ep-square       state)
-          (move-old-castling-rights move) (state-castling-rights state)
-          (move-old-halfmove-clock  move) (state-halfmove-clock  state))
+    (setf (move-old-ep-square       move) (position-ep-square       position)
+          (move-old-castling-rights move) (position-castling-rights position)
+          (move-old-halfmove-clock  move) (position-halfmove-clock  position))
     
     ;; Clocks
     (when (or (eql (piece-type piece) +pawn+) captured)
-      (setf (state-halfmove-clock state) 0))
-    	(incf (state-halfmove-clock state))
+      (setf (position-halfmove-clock position) 0))
+    	(incf (position-halfmove-clock position))
     (when (eql color +black+)
-      (incf (state-fullmove-number state)))
+      (incf (position-fullmove-number position)))
 
     ;; Turn
-    (setf (state-turn state) (enemy-of color))
+    (setf (position-turn position) (enemy-of color))
 
     ;; Ep square
-    (setf (state-ep-square state)
+    (setf (position-ep-square position)
           (when (logtest flags +double-pawn-push-flag+)
             (if (eql color +white+) (+ from 8) (- from 8))))
 
     ;; Castling
-    (setf (state-castling-rights state)
+    (setf (position-castling-rights position)
           (compute-castling-rights
-           (state-castling-rights state) from to
+           (position-castling-rights position) from to
            (piece-type piece) color
            (and captured (piece-type captured))))
 
     ;; Mutations
-    (clear-piece-at! state from)
+    (clear-piece-at! position from)
 
     (cond
       ((logtest flags +en-passant-flag+)
-       (clear-piece-at! state (if (eql color +white+) (- to 8) (+ to 8))))
+       (clear-piece-at! position (if (eql color +white+) (- to 8) (+ to 8))))
       (captured
-       (clear-piece-at! state to)))
+       (clear-piece-at! position to)))
 
     ;; Handle castling
     (when (logtest flags +castling-flag+)
       (let* ((rook-from (castling-rook-from from to))
              (rook-to   (castling-rook-to   from to))
-             (rook      (piece-at state rook-from)))
-        (clear-piece-at! state rook-from)
-        (set-piece-at!   state rook-to   rook)))
+             (rook      (piece-at position rook-from)))
+        (clear-piece-at! position rook-from)
+        (set-piece-at!   position rook-to   rook)))
 
     ;; Finally set the piece down
-    (set-piece-at! state to (or promotion piece))
+    (set-piece-at! position to (or promotion piece))
 
-    state))
+    position))
 
-(defun undo-move! (state move)
+(defun undo-move! (position move)
   "Reverse the effect of a previous DO-MOVE! on STATE."
   (let* ((from      (move-from      move))
          (to        (move-to        move))
@@ -77,31 +77,31 @@
          (flags     (move-flags     move))
          (color     (piece-color piece)))
 
-    (setf (state-ep-square       state) (move-old-ep-square       move)
-          (state-castling-rights state) (move-old-castling-rights move)
-          (state-halfmove-clock  state) (move-old-halfmove-clock  move)
-          (state-turn            state) color)
+    (setf (position-ep-square       position) (move-old-ep-square       move)
+          (position-castling-rights position) (move-old-castling-rights move)
+          (position-halfmove-clock  position) (move-old-halfmove-clock  move)
+          (position-turn            position) color)
     (when (= color +black+)
-      (decf (state-fullmove-number state)))
+      (decf (position-fullmove-number position)))
 
-    (clear-piece-at! state to)
+    (clear-piece-at! position to)
 
-    (set-piece-at! state from piece)
+    (set-piece-at! position from piece)
 
     (cond
       ((logtest flags +en-passant-flag+)
-       (set-piece-at! state (if (= color +white+) (- to 8) (+ to 8)) captured))
+       (set-piece-at! position (if (= color +white+) (- to 8) (+ to 8)) captured))
       (captured
-       (set-piece-at! state to captured)))
+       (set-piece-at! position to captured)))
 
     (when (logtest flags +castling-flag+)
       (let* ((rook-from (castling-rook-from from to))
              (rook-to   (castling-rook-to   from to))
-             (rook      (piece-at state rook-to)))
-        (clear-piece-at! state rook-to)
-        (set-piece-at!   state rook-from rook)))
+             (rook      (piece-at position rook-to)))
+        (clear-piece-at! position rook-to)
+        (set-piece-at!   position rook-from rook)))
 
-    state))
+    position))
 
 
 (declaim (ftype (function (mailbox-index mailbox-index) mailbox-index) castling-rook-from) (inline castling-rook-from))

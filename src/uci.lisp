@@ -11,28 +11,28 @@
     :reader engine-author
     :initform "Unknown"
     :type string)
-   (state
-    :accessor engine-state
-    :initform (make-state)
-    :type state)
+   (position
+    :accessor engine-position
+    :initform (make-position)
+    :type position)
    (options
     :accessor engine-options
     :initform '()
     :type list)))
 
-(defgeneric search-best-move (engine state depth)
+(defgeneric search-best-move (engine position depth)
   (:documentation "Return the best move for current position at depth. Must be specialized."))
 
 (defgeneric on-new-game (engine)
-  (:documentation "Called on `ucinewgame`. Reset any engine-specific state.")
+  (:documentation "Called on `ucinewgame`. Reset any engine-specific position.")
   (:method ((engine uci-engine))
-    ;; Currently just creating a new `state` object is enough
-    (setf (engine-state engine) (make-state))))
+    ;; Currently just creating a new `position` object is enough
+    (setf (engine-position engine) (make-position))))
 
-(defgeneric on-position (engine state)
+(defgeneric on-position (engine position)
   (:documentation "Called after a position has been set up and all moves applied.")
-  (:method ((engine uci-engine) state)
-    (declare (ignore state))
+  (:method ((engine uci-engine) position)
+    (declare (ignore position))
     nil))
 
 (defgeneric on-quit (engine)
@@ -51,7 +51,7 @@
 
 
 
-(defun find-uci-move (state token)
+(defun find-uci-move (position token)
   "Match a UCI move string against legal moves"
   (find-if (lambda (move)
 	     (let ((base (format nil "~a~a"
@@ -62,14 +62,14 @@
 			(string= base (str:substring 0 4 token))
 			(member (aref token 4) '(#\q #\r #\b #\n) :test #'char=))
 		   (string= base token))))
-	   (generate-legal-moves state)))
+	   (generate-legal-moves position)))
 
-(defun apply-moves (state tokens)
-  "Apply a sequence of UCI moves to state"
+(defun apply-moves (position tokens)
+  "Apply a sequence of UCI moves to position"
   (iter
     (for token in tokens)
-    (for move = (find-uci-move state token))
-    (when move (do-move! state move))))
+    (for move = (find-uci-move position token))
+    (when move (do-move! position move))))
 
 (defun handle-go (engine tokens)
   "Call `search-best-move` based on depth from tokens and print out best move. Default depth is 15."
@@ -77,7 +77,7 @@
 	 (depth (if depth-pos
 		    (parse-integer (nth (1+ depth-pos) tokens))
 		    15)))
-    (let ((move (search-best-move engine (engine-state engine) depth)))
+    (let ((move (search-best-move engine (engine-position engine) depth)))
       (if move
 	  (uci-send "bestmove ~a~a~@[~a~]"
 		    (square->algebraic (move-from move))
@@ -91,13 +91,13 @@
 	  (uci-send "bestmove 0000")))))
 
 (defun handle-position (engine tokens)
-  "Handle position by resetting state and replaying moves."
-  (setf (engine-state engine) (make-state))
+  "Handle position by resetting position and replaying moves."
+  (setf (engine-position engine) (make-position))
   (let ((moves-pos (position "moves" tokens :test #'string=)))
     (when moves-pos
-      (apply-moves (engine-state engine)
+      (apply-moves (engine-position engine)
                    (subseq tokens (1+ moves-pos)))))
-  (on-position engine (engine-state engine)))
+  (on-position engine (engine-position engine)))
 
 (defun uci-loop (engine)
   "Main UCI loop. Blocks until `quit` is received"

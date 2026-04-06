@@ -7,21 +7,21 @@ Exported symbols can be found in ~package.lisp~
 *** Creating positions
 Still at a barebone stage, FEN strings will come soon.
 #+begin_src lisp
-(defparameter *test-state* (qiku:make-state)) ;; Initializes to default position
+(defparameter *test-position* (qiku:make-position)) ;; Initializes to default position
 #+end_src
 
 *** Moves and move generation
 #+begin_src lisp
-(defparameter *test-state* (qiku:make-state))
-(let ((moves (qiku:generate-legal-moves *test-state*)))
+(defparameter *test-position* (qiku:make-position))
+(let ((moves (qiku:generate-legal-moves *test-position*)))
   (loop
      for m in moves
-     do ((do-move! (*test-state* m))
-	 (undo-move! (*test-state* m)))))
+     do ((do-move! (*test-position* m))
+	 (undo-move! (*test-position* m)))))
 #+end_src
 
 *** Perft
 #+begin_src lisp
-(let ((*test-state* (qiku:make-state)))
-  (qiku:perft *test-state* 5))
+(let ((*test-position* (qiku:make-position)))
+  (qiku:perft *test-position* 5))
 #+end_src
