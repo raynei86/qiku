@@ -28,6 +28,8 @@
    (position-fullmove-number position)))
 
 (defun position-snapshot= (left right)
+  ;; The mailbox is a vector, so use EQUALP for element-wise array comparison.
+  ;; Scalar metadata fields compare correctly with EQUAL.
   (and (equalp (first left) (first right))
        (equal (rest left) (rest right))))
 

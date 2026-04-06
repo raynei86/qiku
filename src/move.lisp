@@ -69,7 +69,7 @@
     position))
 
 (defun undo-move! (position move)
-  "Reverse the effect of a previous DO-MOVE! on STATE."
+  "Reverse the effect of a previous DO-MOVE! on POSITION."
   (let* ((from      (move-from      move))
          (to        (move-to        move))
          (piece     (move-piece     move))
